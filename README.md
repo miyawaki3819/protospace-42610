@@ -13,6 +13,10 @@
 | position           | TEXT         | NOT NULL           |
 | created_at         | TIMESTAMP    | NOT NULL           |
 | updated_at         | TIMESTAMP    | NOT NULL           |
+
+### アソシエーション
+- User は複数の Prototype を持つ（1 対多）
+- User は複数の Comment を持つ（1 対多）
 ---
 
 ## prototypes テーブル
@@ -26,8 +30,8 @@
 | created_at | TIMESTAMP    | NOT NULL           |
 | updated_at | TIMESTAMP    | NOT NULL           |
 
-### 外部キー
-FOREIGN KEY (user_id) REFERENCES users(id)
+### アソシエーション
+- 1つのプロトタイプに対して複数のコメントが投稿される（1対多）
 ---
 
 ## images テーブル
@@ -40,8 +44,8 @@ FOREIGN KEY (user_id) REFERENCES users(id)
 | image_data   | BYTEA        | NOT NULL           |
 | created_at   | TIMESTAMP    | NOT NULL           |
 
-### 外部キー
-FOREIGN KEY (prototype_id) REFERENCES prototypes(id)
+### アソシエーション
+- 1つのプロトタイプに対して複数の画像が投稿される（1対多）
 ---
 
 ## comments テーブル
@@ -53,24 +57,4 @@ FOREIGN KEY (prototype_id) REFERENCES prototypes(id)
 | user_id      | BIGINT    | NOT NULL, FK       |
 | created_at   | TIMESTAMP | NOT NULL           |
 | updated_at   | TIMESTAMP | NOT NULL           |
-
-### 外部キー
-FOREIGN KEY (prototype_id) REFERENCES prototypes(id)
-FOREIGN KEY (user_id) REFERENCES users(id)
----
-
-## リレーションまとめ（ER構造）
-users 1 ── * prototypes
-users 1 ── * comments
-prototypes 1 ── * comments
-prototypes 1 ── * images
----
-
-## Java / JPA エンティティ対応（参考）
-| エンティティ    | 関連                                              |
-| --------- | ----------------------------------------------- |
-| User      | @OneToMany prototypes / comments                |
-| Prototype | @ManyToOne user<br>@OneToMany images / comments |
-| Image     | @ManyToOne prototype                            |
-| Comment   | @ManyToOne user / prototype                     |
 ---

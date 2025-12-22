@@ -1,0 +1,32 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="form(actionUrl)">
+  <form th:action="${actionUrl}" enctype="multipart/form-data" th:method="post">
+    <div class="field">
+      <label for="prototype_title">プロトタイプの名称</label><br />
+      <input type="text" id="prototype_title" required />
+    </div>
+
+    <div class="field">
+      <label for="prototype_catch_copy">キャッチコピー</label><br />
+      <textarea
+        id="prototype_catch_copy"
+        class="form__text"
+        required
+      ></textarea>
+    </div>
+
+    <div class="field">
+      <label for="prototype_concept">コンセプト</label><br />
+      <textarea id="prototype_concept" class="form__text" required></textarea>
+    </div>
+
+    <!-- 画像投稿機能 -->
+    <div class="field">
+      <label for="prototype_image">プロトタイプの画像</label><br />
+      <input type="file" id="prototype_image" required />
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="form__btn">保存する</button>
+    </div>
+  </form>
+</div>

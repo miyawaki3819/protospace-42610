@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Protospace</title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <div th:insert="~{header :: header}"></div>
+    <div class="main">
+      <div class="inner">
+        <div class="form__wrapper">
+          <h2 class="page-heading">新規プロトタイプ編集</h2>
+          <!-- 部分テンプレートでフォームを表示する -->
+        </div>
+      </div>
+    </div>
+    <div th:insert="~{footer :: footer}"></div>
+  </body>
+</html>

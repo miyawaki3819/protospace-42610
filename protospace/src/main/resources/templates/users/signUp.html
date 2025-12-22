@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link th:href="@{/css/style.css}" rel="stylesheet" type="text/css" />
+    <title>Protospace</title>
+  </head>
+
+  <body>
+    <div th:insert="~{header :: header}"></div>
+    <div class="main">
+      <div class="inner">
+        <div class="form__wrapper">
+          <h2 class="page-heading">ユーザー新規登録</h2>
+
+          <form
+            th:action="@{/user}"
+            th:object="${userForm}"
+            th:method="post"
+            class="form__new"
+          >
+            <div class="field">
+              <label for="user_name">ユーザー名</label><br />
+              <input type="text" id="user_name" />
+            </div>
+
+            <div class="field">
+              <label for="user_email">メールアドレス</label><br />
+              <input
+                type="email"
+                id="user_email"
+                autofocus
+                autocomplete="email"
+              />
+            </div>
+
+            <div class="field">
+              <label for="user_password">パスワード（6文字以上）</label><br />
+              <input
+                type="password"
+                id="user_password"
+                autocomplete="new-password"
+              />
+            </div>
+
+            <div class="field">
+              <label for="user_password_confirmation">パスワード再入力</label
+              ><br />
+              <input
+                type="password"
+                id="user_password_confirmation"
+                autocomplete="new-password"
+              />
+            </div>
+
+            <div class="field">
+              <label for="user_profile">プロフィール</label><br />
+              <textarea class="form__text" id="user_profile"></textarea>
+            </div>
+
+            <div class="field">
+              <label for="user_occupation">所属</label><br />
+              <textarea class="form__text" id="user_occupation"></textarea>
+            </div>
+
+            <div class="field">
+              <label for="user_position">役職</label><br />
+              <textarea class="form__text" id="user_position"></textarea>
+            </div>
+
+            <div class="actions">
+              <input type="submit" value="新規登録" class="form__btn" />
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
