@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Protospace</title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <div th:insert="~{header :: header}"></div>
+
+    <main class="main">
+      <div class="inner">
+        <div class="prototype__wrapper">
+          <p class="prototype__hedding"></p>
+          <!-- プロトタイプの名称を表示させる -->
+          <a th:href="@{/}" class="prototype__user" th:text="'by '"></a>
+          <!-- プロトタイプの投稿者とログインしているユーザーが同じであれば以下を表示する -->
+          <div class="prototype__manage">
+            <a th:href="@{/}" class="prototype__btn">編集する</a>
+            <form
+              th:action="@{/}"
+              method="post"
+              class="prototype__btn delete-btn"
+            >
+              <input
+                type="submit"
+                class="prototype__btn delete-btn"
+                value="削除する"
+              />
+            </form>
+            <!-- プロトタイプの投稿者とログインしているユーザーが同じであれば上記を表示する -->
+          </div>
+          <div class="prototype__image">
+            <img alt="プロトタイプの画像" />
+          </div>
+          <div class="prototype__body">
+            <div class="prototype__detail">
+              <p class="detail__title">キャッチコピー</p>
+              <p class="detail__message"></p>
+            </div>
+            <div class="prototype__detail">
+              <p class="detail__title">コンセプト</p>
+              <p class="detail__message"></p>
+            </div>
+          </div>
+          <div class="prototype__comments">
+            <!-- ログインしているユーザーには以下のコメント投稿フォームを表示する -->
+            <div>
+              <form th:action="@{/}" method="post" th:object="${commentForm}">
+                <div class="field">
+                  <label for="content">コメント</label><br />
+                  <input type="text" id="text" />
+                </div>
+                <div class="actions">
+                  <input type="submit" class="form__btn" value="送信する" />
+                </div>
+              </form>
+            </div>
+            <!-- ログインしているユーザーには上記のコメント投稿フォームを表示する -->
+
+            <!-- 投稿に紐づくコメントを一覧する処理を記述する -->
+            <ul class="comments_lists">
+              <li class="comments_list">
+                <a th:href="@{/}" class="comment_user"></a>
+              </li>
+            </ul>
+            <!-- 投稿に紐づくコメントを一覧する処理を記述する -->
+          </div>
+        </div>
+      </div>
+    </main>
+    <div th:insert="~{footer :: footer}"></div>
+  </body>
+</html>

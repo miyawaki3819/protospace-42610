@@ -1,0 +1,20 @@
+<header xmlns:th="http://www.thymeleaf.org" th:fragment="header" class="header">
+  <div class="inner">
+    <div class="nav">
+      <div class="nav__left">
+        <a th:href="@{/}">
+          <img th:src="@{/images/logo.png}" class="logo" alt="Logo" />
+        </a>
+      </div>
+      <div class="nav__right">
+        <a th:href="@{/}" class="nav__logout">ログアウト</a>
+        <a th:href="@{/}" class="nav__btn">New Proto</a>
+      </div>
+
+      <div class="nav__right">
+        <a th:href="@{/}" class="nav__btn">ログイン</a>
+        <a th:href="@{/}" class="nav__btn">新規登録</a>
+      </div>
+    </div>
+  </div>
+</header>

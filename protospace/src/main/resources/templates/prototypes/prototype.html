@@ -1,0 +1,25 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="content(prototype)" >
+  <a
+    th:href="@{/}"
+    th:class="'card__img'"
+  >
+  <!-- aタグ内で　th:style="'background-image: url(' + (${適切な記述を追加}) + ');'"　を使用し、画像を表示させる -->
+
+    <img
+      alt="プロトタイプの画像"
+      class="card__img"
+    />
+  </a>
+  <div class="card__body">
+    <a
+    th:href="@{/}"
+      class="card__title"
+    ></a>
+    <p class="card__summary" ></p>
+    <a
+      th:href="@{/}"
+      class="card__user"
+    ></a>
+  </div>
+</div>
+</div>
