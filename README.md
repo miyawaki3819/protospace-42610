@@ -24,7 +24,7 @@
 | title      | VARCHAR(255) | NOT NULL           |
 | catch_copy | TEXT         | NOT NULL           |
 | concept    | TEXT         | NOT NULL           |
-| user_id    | INTEGER      | NOT NULL, FK       |
+| user_id    | REFERENCES   | NOT NULL, FK       |
 | image_name | VARCHAR(255) | NOT NULL           |
 | image_type | VARCHAR(100) | NOT NULL           |
 | image_data | BYTEA        | NOT NULL           |
@@ -39,8 +39,8 @@
 | ------------ | ----------- | ------------------ |
 | id           | SERIAL      | PK                 |
 | content      | TEXT        | NOT NULL           |
-| prototype_id | INTEGER     | NOT NULL, FK       |
-| user_id      | INTEGER     | NOT NULL, FK       |
+| prototype_id | REFERENCES  | NOT NULL, FK       |
+| user_id      | REFERENCES  | NOT NULL, FK       |
 
 ### アソシエーション
 - @ManyToOne User
