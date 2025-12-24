@@ -18,6 +18,9 @@ div {
 body {
   font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN W3", sans-serif;
   color: #3b4043;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 li {
@@ -118,6 +121,10 @@ a {
 }
 
 /* メイン */
+
+.main {
+  flex: 1;
+}
 
 .greeting {
   margin-bottom: 20px;
@@ -281,6 +288,7 @@ input[type="submit"].prototype__btn {
 .footer {
   background-color: #999;
   padding: 10px 0;
+  margin-top: auto;
 }
 .copyright {
   text-align: center;
