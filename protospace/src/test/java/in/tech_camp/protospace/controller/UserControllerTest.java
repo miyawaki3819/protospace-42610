@@ -224,5 +224,25 @@ class UserControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/user/login"));
     }
+
+    @Test
+    void create_異常系_重複したemailを登録しようとした場合バリデーションエラーが発生する() throws Exception {
+        // 既存のユーザーが存在する場合をシミュレート
+        when(userMapper.findByEmail("existing@example.com")).thenReturn(testUser);
+
+        mockMvc.perform(post("/user")
+                        .param("email", "existing@example.com")
+                        .param("password", "encrypted_dummy_password")
+                        .param("passwordConfirmation", "encrypted_dummy_password")
+                        .param("name", "テストユーザー")
+                        .param("profile", "テストプロフィール")
+                        .param("occupation", "テスト所属")
+                        .param("position", "テスト役職"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("users/signUp"));
+
+        verify(userMapper, times(1)).findByEmail("existing@example.com");
+        verify(userMapper, never()).insert(any(User.class));
+    }
 }
 

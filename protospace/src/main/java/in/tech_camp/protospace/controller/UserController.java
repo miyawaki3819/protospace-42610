@@ -41,6 +41,13 @@ public class UserController {
             return "users/signUp";
         }
 
+        // メールアドレスの重複チェック
+        User existingUser = userMapper.findByEmail(userForm.getEmail());
+        if (existingUser != null) {
+            bindingResult.rejectValue("email", "error.email", "このメールアドレスは既に登録されています");
+            return "users/signUp";
+        }
+
         // UserFormからUserエンティティに変換
         User user = new User();
         user.setEmail(userForm.getEmail());
