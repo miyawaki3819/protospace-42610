@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .loginPage("/user/login")
                 .loginProcessingUrl("/user/login") // フォームのth:actionと同じにする
                 .defaultSuccessUrl("/", true)
-                .failureUrl("/user/login?error") // エラー時にパラメータを付与
+                .failureUrl("/user/login?") // エラー時にパラメータを付与
                 .permitAll()
             )
             .logout(logout -> logout
