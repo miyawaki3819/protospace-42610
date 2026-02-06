@@ -3,6 +3,7 @@ package in.tech_camp.protospace.controller;
 import in.tech_camp.protospace.entity.UserEntity;
 import in.tech_camp.protospace.form.UserForm;
 import in.tech_camp.protospace.repository.UserRepository;
+import in.tech_camp.protospace.service.SecurityService;
 import in.tech_camp.protospace.service.UserService;
 import in.tech_camp.protospace.factory.UserFormFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,12 +19,8 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -39,7 +36,7 @@ class UserControllerTest {
     private UserService userService;
 
     @Mock
-    private HttpServletRequest request;
+    private SecurityService securityService;
 
     @InjectMocks
     private UserController userController;
@@ -62,16 +59,17 @@ class UserControllerTest {
         }
 
         @Test
-        void create_ユーザー登録が成功しトップページにリダイレクトされる() {
+        void create_ユーザー登録が成功し自動ログインされてトップページにリダイレクトされる() {
             UserForm userForm = UserFormFactory.build();
             BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
             when(userRepository.existsByEmail(userForm.getEmail())).thenReturn(false);
 
-            String result = userController.createUser(userForm, bindingResult, model, request);
+            String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("redirect:/"));
 
             verify(userRepository, times(1)).existsByEmail(userForm.getEmail());
             verify(userService, times(1)).createUserWithEncryptedPassword(any(UserEntity.class));
+            verify(securityService, times(1)).autoLogin(userForm.getEmail());
         }
 
         @Test
@@ -100,7 +98,7 @@ class UserControllerTest {
             BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
             bindingResult.reject("passwordConfirmationValid");
 
-            String result = userController.createUser(userForm, bindingResult, model, request);
+            String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
             verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
@@ -112,7 +110,7 @@ class UserControllerTest {
             BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
             bindingResult.rejectValue("email", "null", "Invalid email format");
 
-            String result = userController.createUser(userForm, bindingResult, model, request);
+            String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
             verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
@@ -127,25 +125,10 @@ class UserControllerTest {
             BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
             bindingResult.rejectValue("password", "null", "Password too short");
 
-            String result = userController.createUser(userForm, bindingResult, model, request);
+            String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
             verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
-        }
-
-        @Test
-        void create_登録は成功したが自動ログインに失敗した場合RuntimeExceptionが発生する() throws Exception {
-            UserForm userForm = UserFormFactory.build();
-            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
-            when(userRepository.existsByEmail(userForm.getEmail())).thenReturn(false);
-            doThrow(new ServletException("login failed")).when(request).login(anyString(), anyString());
-
-            RuntimeException thrown = assertThrows(RuntimeException.class, () ->
-                    userController.createUser(userForm, bindingResult, model, request));
-
-            assertThat(thrown.getMessage(), is("登録後の自動ログインに失敗しました"));
-            assertThat(thrown.getCause(), is(instanceOf(ServletException.class)));
-            verify(userService, times(1)).createUserWithEncryptedPassword(any(UserEntity.class));
         }
 
         @Test
@@ -154,11 +137,12 @@ class UserControllerTest {
             BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
             when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
 
-            String result = userController.createUser(userForm, bindingResult, model, request);
+            String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
             verify(userRepository, times(1)).existsByEmail("existing@example.com");
             verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+            verify(securityService, never()).autoLogin(anyString());
         }
 
         @Test
@@ -175,7 +159,7 @@ class UserControllerTest {
             bindingResult.rejectValue("occupation", "null", "Occupation is required");
             bindingResult.rejectValue("position", "null", "Position is required");
 
-            String result = userController.createUser(userForm, bindingResult, model, request);
+            String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
             verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
@@ -187,7 +171,7 @@ class UserControllerTest {
             BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
             bindingResult.rejectValue("profile", "null", "Profile is required");
 
-            String result = userController.createUser(userForm, bindingResult, model, request);
+            String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
             verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
@@ -199,7 +183,7 @@ class UserControllerTest {
             BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
             bindingResult.rejectValue("occupation", "null", "Occupation is required");
 
-            String result = userController.createUser(userForm, bindingResult, model, request);
+            String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
             verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
@@ -211,7 +195,7 @@ class UserControllerTest {
             BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
             bindingResult.rejectValue("position", "null", "Position is required");
 
-            String result = userController.createUser(userForm, bindingResult, model, request);
+            String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
             verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
