@@ -1,10 +1,12 @@
 package in.tech_camp.protospace.controller;
 
+import in.tech_camp.protospace.entity.UserEntity;
 import in.tech_camp.protospace.form.UserForm;
 import in.tech_camp.protospace.repository.UserRepository;
 import in.tech_camp.protospace.service.UserService;
 import in.tech_camp.protospace.factory.UserFormFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,9 +18,14 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,183 +38,208 @@ class UserControllerTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private HttpServletRequest request;
+
     @InjectMocks
     private UserController userController;
 
     private Model model;
-    private UserForm userForm;
 
     @BeforeEach
     void setUp() {
         model = new ExtendedModelMap();
-        userForm = UserFormFactory.createValidUserForm();
     }
 
-    @Test
-    void signUp_正常系_新規登録ページが表示される() {
-        String result = userController.signUpForm(model);
-        assertThat(result, is("users/signUp"));
-        assertThat(model.asMap(), hasKey("userForm"));
+    @Nested
+    class 正常系 {
+
+        @Test
+        void signUp_新規登録ページが表示される() {
+            String result = userController.signUpForm(model);
+            assertThat(result, is("users/signUp"));
+            assertThat(model.asMap(), hasKey("userForm"));
+        }
+
+        @Test
+        void create_ユーザー登録が成功しトップページにリダイレクトされる() {
+            UserForm userForm = UserFormFactory.build();
+            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
+            when(userRepository.existsByEmail(userForm.getEmail())).thenReturn(false);
+
+            String result = userController.createUser(userForm, bindingResult, model, request);
+            assertThat(result, is("redirect:/"));
+
+            verify(userRepository, times(1)).existsByEmail(userForm.getEmail());
+            verify(userService, times(1)).createUserWithEncryptedPassword(any(UserEntity.class));
+        }
+
+        @Test
+        void login_ログインページが表示される() {
+            String result = userController.showLogin();
+            assertThat(result, is("users/login"));
+        }
+
+        @Test
+        void login_ログインが成功しトップページにリダイレクトされる() {
+            assertThat(userController, notNullValue());
+        }
+
+        @Test
+        void logout_ログアウトが成功しトップページにリダイレクトされる() {
+            assertThat(userController, notNullValue());
+        }
     }
 
-    @Test
-    void create_正常系_ユーザー登録が成功しログインページにリダイレクトされる() {
-        BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
-        when(userRepository.existsByEmail("test@example.com")).thenReturn(false);
+    @Nested
+    class 異常系 {
 
-        String result = userController.createUser(userForm, bindingResult, model);
-        assertThat(result, containsString("redirect"));
+        @Test
+        void create_パスワードとパスワード再入力が一致しない場合() {
+            UserForm userForm = UserFormFactory.build(f -> f.setPasswordConfirmation("different_password"));
+            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
+            bindingResult.reject("passwordConfirmationValid");
 
-        verify(userRepository, times(1)).existsByEmail("test@example.com");
-        verify(userService, times(1)).createUser(any(UserForm.class));
-    }
+            String result = userController.createUser(userForm, bindingResult, model, request);
+            assertThat(result, is("users/signUp"));
 
-    @Test
-    void create_異常系_パスワードとパスワード再入力が一致しない場合() {
-        userForm.setPasswordConfirmation("different_password");
-        BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
-        userForm.validatePasswordConfirmation(bindingResult);
+            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+        }
 
-        String result = userController.createUser(userForm, bindingResult, model);
-        assertThat(result, is("users/signUp"));
+        @Test
+        void create_メールアドレス形式が不正な場合() {
+            UserForm userForm = UserFormFactory.build(f -> f.setEmail("invalid-email"));
+            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
+            bindingResult.rejectValue("email", "null", "Invalid email format");
 
-        verify(userService, never()).createUser(any(UserForm.class));
-    }
+            String result = userController.createUser(userForm, bindingResult, model, request);
+            assertThat(result, is("users/signUp"));
 
-    @Test
-    void login_正常系_ログインページが表示される() {
-        String result = userController.showLogin(model);
-        assertThat(result, is("users/login"));
-    }
+            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+        }
 
-    @Test
-    void create_異常系_メールアドレス形式が不正な場合() {
-        userForm.setEmail("invalid-email");
-        BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
-        // メールアドレス形式検証をシミュレート
-        bindingResult.rejectValue("email", "null", "Invalid email format");
+        @Test
+        void create_パスワードが規定文字数未満の場合() {
+            UserForm userForm = UserFormFactory.build(f -> {
+                f.setPassword("12345");
+                f.setPasswordConfirmation("12345");
+            });
+            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
+            bindingResult.rejectValue("password", "null", "Password too short");
 
-        String result = userController.createUser(userForm, bindingResult, model);
-        assertThat(result, is("users/signUp"));
+            String result = userController.createUser(userForm, bindingResult, model, request);
+            assertThat(result, is("users/signUp"));
 
-        verify(userService, never()).createUser(any(UserForm.class));
-    }
+            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+        }
 
-    @Test
-    void create_異常系_パスワードが規定文字数未満の場合() {
-        userForm.setPassword("12345");
-        userForm.setPasswordConfirmation("12345");
-        BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
-        // パスワード長の検証をシミュレート
-        bindingResult.rejectValue("password", "null", "Password too short");
+        @Test
+        void create_登録は成功したが自動ログインに失敗した場合RuntimeExceptionが発生する() throws Exception {
+            UserForm userForm = UserFormFactory.build();
+            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
+            when(userRepository.existsByEmail(userForm.getEmail())).thenReturn(false);
+            doThrow(new ServletException("login failed")).when(request).login(anyString(), anyString());
 
-        String result = userController.createUser(userForm, bindingResult, model);
-        assertThat(result, is("users/signUp"));
+            RuntimeException thrown = assertThrows(RuntimeException.class, () ->
+                    userController.createUser(userForm, bindingResult, model, request));
 
-        verify(userService, never()).createUser(any(UserForm.class));
-    }
+            assertThat(thrown.getMessage(), is("登録後の自動ログインに失敗しました"));
+            assertThat(thrown.getCause(), is(instanceOf(ServletException.class)));
+            verify(userService, times(1)).createUserWithEncryptedPassword(any(UserEntity.class));
+        }
 
-    @Test
-    void create_異常系_重複したemailを登録しようとした場合バリデーションエラーが発生する() {
-        userForm.setEmail("existing@example.com");
-        BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
-        when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
+        @Test
+        void create_重複したemailを登録しようとした場合バリデーションエラーが発生する() {
+            UserForm userForm = UserFormFactory.build(f -> f.setEmail("existing@example.com"));
+            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
+            when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
 
-        String result = userController.createUser(userForm, bindingResult, model);
-        assertThat(result, is("users/signUp"));
+            String result = userController.createUser(userForm, bindingResult, model, request);
+            assertThat(result, is("users/signUp"));
 
-        verify(userRepository, times(1)).existsByEmail("existing@example.com");
-        verify(userService, never()).createUser(any(UserForm.class));
-    }
+            verify(userRepository, times(1)).existsByEmail("existing@example.com");
+            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+        }
 
-    @Test
-    void create_異常系_必須項目が空の場合() {
-        userForm.setName("");
-        userForm.setProfile("");
-        userForm.setOccupation("");
-        userForm.setPosition("");
-        BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
-        // 必須項目検証をシミュレート
-        bindingResult.rejectValue("name", "null", "Name is required");
-        bindingResult.rejectValue("profile", "null", "Profile is required");
-        bindingResult.rejectValue("occupation", "null", "Occupation is required");
-        bindingResult.rejectValue("position", "null", "Position is required");
+        @Test
+        void create_必須項目が空の場合() {
+            UserForm userForm = UserFormFactory.build(f -> {
+                f.setName("");
+                f.setProfile("");
+                f.setOccupation("");
+                f.setPosition("");
+            });
+            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
+            bindingResult.rejectValue("name", "null", "Name is required");
+            bindingResult.rejectValue("profile", "null", "Profile is required");
+            bindingResult.rejectValue("occupation", "null", "Occupation is required");
+            bindingResult.rejectValue("position", "null", "Position is required");
 
-        String result = userController.createUser(userForm, bindingResult, model);
-        assertThat(result, is("users/signUp"));
+            String result = userController.createUser(userForm, bindingResult, model, request);
+            assertThat(result, is("users/signUp"));
 
-        verify(userService, never()).createUser(any(UserForm.class));
-    }
+            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+        }
 
-    @Test
-    void login_正常系_ログインが成功しトップページにリダイレクトされる() {
-        // ログイン処理はセキュリティ設定で処理されるため、
-        // ユニットテストではコントローラーメソッドの存在確認のみ
-        assertThat(userController, notNullValue());
-    }
+        @Test
+        void create_ユーザーの新規登録にはプロフィールが必須であること() {
+            UserForm userForm = UserFormFactory.build(f -> f.setProfile(""));
+            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
+            bindingResult.rejectValue("profile", "null", "Profile is required");
 
-    @Test
-    void login_異常系_パスワードが一致しない場合() {
-        // ログイン処理はセキュリティ設定で処理されるため、
-        // ユニットテストではコントローラーメソッドの存在確認のみ
-        assertThat(userController, notNullValue());
-    }
+            String result = userController.createUser(userForm, bindingResult, model, request);
+            assertThat(result, is("users/signUp"));
 
-    @Test
-    void login_異常系_メールアドレス形式が不正な場合() {
-        // ログイン処理はセキュリティ設定で処理されるため、
-        // ユニットテストではコントローラーメソッドの存在確認のみ
-        assertThat(userController, notNullValue());
-    }
+            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+        }
 
-    @Test
-    void login_異常系_ユーザーが存在しない場合() {
-        // ログイン処理はセキュリティ設定で処理されるため、
-        // ユニットテストではコントローラーメソッドの存在確認のみ
-        assertThat(userController, notNullValue());
-    }
+        @Test
+        void create_ユーザーの新規登録には所属が必須であること() {
+            UserForm userForm = UserFormFactory.build(f -> f.setOccupation(""));
+            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
+            bindingResult.rejectValue("occupation", "null", "Occupation is required");
 
-    @Test
-    void login_異常系_ログイン中にログインページへアクセスした場合トップページへリダイレクトされる() {
-        // ログイン中の状態は、セキュリティ設定で処理されるため、
-        // ユニットテストではコントローラーメソッドの存在確認のみ
-        assertThat(userController, notNullValue());
-    }
+            String result = userController.createUser(userForm, bindingResult, model, request);
+            assertThat(result, is("users/signUp"));
 
-    @Test
-    void login_異常系_必須項目が空の場合() {
-        // ログイン処理はセキュリティ設定で処理されるため、
-        // ユニットテストではコントローラーメソッドの存在確認のみ
-        assertThat(userController, notNullValue());
-    }
+            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+        }
 
-    @Test
-    void logout_正常系_ログアウトが成功しトップページにリダイレクトされる() {
-        // ログアウト処理はセキュリティ設定で処理されるため、
-        // ユニットテストではコントローラーメソッドの存在確認のみ
-        assertThat(userController, notNullValue());
-    }
+        @Test
+        void create_ユーザーの新規登録には役職が必須であること() {
+            UserForm userForm = UserFormFactory.build(f -> f.setPosition(""));
+            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
+            bindingResult.rejectValue("position", "null", "Position is required");
 
-    // PrototypeControllerTest から移行したテスト項目
-    @Test
-    void index_正常系_未ログイン状態でトップページが表示される() throws Exception {
-        // PrototypeControllerのテストから移行
-    }
+            String result = userController.createUser(userForm, bindingResult, model, request);
+            assertThat(result, is("users/signUp"));
 
-    @Test
-    void index_正常系_ログイン状態でトップページが表示される() throws Exception {
-        // @WithMockUserは認証のみで、実際のユーザー情報はCustomUserDetailから取得されないため
-        // ユーザーがモデルに含まれない場合がある
-    }
+            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+        }
 
-    @Test
-    void index_正常系_セッションにuserIdがあるが該当ユーザーが存在しない場合でもエラーにならない() throws Exception {
-        // PrototypeControllerのテストから移行
-    }
+        @Test
+        void login_パスワードが一致しない場合() {
+            assertThat(userController, notNullValue());
+        }
 
-    @Test
-    void newPrototype_異常系_未ログイン状態でログイン必須機能にアクセスした場合ログインページへリダイレクトされる() throws Exception {
-        // PrototypeControllerのテストから移行
+        @Test
+        void login_メールアドレス形式が不正な場合() {
+            assertThat(userController, notNullValue());
+        }
+
+        @Test
+        void login_ユーザーが存在しない場合() {
+            assertThat(userController, notNullValue());
+        }
+
+        @Test
+        void login_ログイン中にログインページへアクセスした場合トップページへリダイレクトされる() {
+            assertThat(userController, notNullValue());
+        }
+
+        @Test
+        void login_必須項目が空の場合() {
+            assertThat(userController, notNullValue());
+        }
     }
 }
-

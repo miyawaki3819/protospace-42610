@@ -10,8 +10,8 @@
     <div th:insert="~{header :: header}"></div>
     <div class="main">
         <div class="inner">
-            <div th:if="${user != null}">
-                <h1>こんにちは、<span th:text="${user.user.name}"></span>さん</h1>
+            <div sec:authorize="isAuthenticated()">
+                <h1>こんにちは、<span th:text="${#authentication.principal.user.name}"></span>さん</h1>
             </div>
         </div>
     </div>

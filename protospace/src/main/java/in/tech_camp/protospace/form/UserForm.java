@@ -1,39 +1,47 @@
 package in.tech_camp.protospace.form;
 
+import org.springframework.validation.BindingResult;
+
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import org.springframework.validation.BindingResult;
 
 @Data
 public class UserForm {
-    @NotBlank(message = "メールアドレスは必須です")
-    @Email(message = "有効なメールアドレスを入力してください")
-    private String email;
-
-    @NotBlank(message = "パスワードは必須です")
-    @Size(min = 6, message = "パスワードは6文字以上で入力してください")
-    private String password;
-
-    @NotBlank(message = "パスワード再入力は必須です")
-    private String passwordConfirmation;
-
-    @NotBlank(message = "ユーザー名は必須です")
+    @NotBlank(message = "Name is required")
     private String name;
 
-    @NotBlank(message = "プロフィールは必須です")
-    private String profile;
+    @NotBlank(message = "Email is required")
+    @Email(message = "Please enter a valid email address")
+    private String email;
 
-    @NotBlank(message = "所属は必須です")
-    private String occupation;
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
 
-    @NotBlank(message = "役職は必須です")
-    private String position;
+    @NotBlank(message = "Password confirmation is required")
+    private String passwordConfirmation;
+
+    @AssertTrue(message = "Passwords do not match")
+    public boolean isPasswordConfirmationValid() {
+        return password == null || password.equals(passwordConfirmation);
+    }
 
     public void validatePasswordConfirmation(BindingResult result) {
-        if (password != null && !password.equals(passwordConfirmation)) {
-            result.rejectValue("passwordConfirmation", "null", "パスワードが一致しません");
+        if (!password.equals(passwordConfirmation)) {
+            result.rejectValue("passwordConfirmation", "error.user", "Passwords do not match");
         }
     }
+
+    @NotBlank(message = "Profile is required")
+    private String profile;
+
+    @NotBlank(message = "Occupation is required")
+    private String occupation;
+
+    @NotBlank(message = "Position is required")
+    private String position;
+
 }

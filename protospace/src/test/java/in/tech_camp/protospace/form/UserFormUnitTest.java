@@ -1,8 +1,8 @@
 package in.tech_camp.protospace.form;
+
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ActiveProfiles;
@@ -15,82 +15,90 @@ import jakarta.validation.ValidatorFactory;
 
 @ActiveProfiles("test")
 public class UserFormUnitTest {
-    private UserForm userForm;
     private Validator validator;
 
     @BeforeEach
     public void setUp() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
-        userForm = UserFormFactory.createValidUserForm();
     }
 
     @Test
     public void nicknameとemailとpasswordとpasswordConfirmationが存在すれば登録できる() {
+        var userForm = UserFormFactory.build();
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
         assertEquals(0, violations.size());
     }
 
     @Test
     public void nicknameが空の場合バリデーションエラーが発生する() {
-        userForm = UserFormFactory.createUserFormWithEmptyName();
+        var userForm = UserFormFactory.build(f -> f.setName(""));
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
         assertEquals(1, violations.size());
-        assertEquals("ユーザー名は必須です", violations.iterator().next().getMessage());
+        assertEquals("Name is required", violations.iterator().next().getMessage());
     }
 
     @Test
     public void emailが空の場合バリデーションエラーが発生する() {
-        userForm = UserFormFactory.createUserFormWithEmptyEmail();
+        var userForm = UserFormFactory.build(f -> f.setEmail(""));
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
-        assertTrue(violations.size() >= 1);
+        assertEquals(1, violations.size());
+        assertEquals("Email is required", violations.iterator().next().getMessage());
     }
 
     @Test
     public void passwordが空の場合バリデーションエラーが発生する() {
-        userForm = UserFormFactory.createUserFormWithEmptyPassword();
+        var userForm = UserFormFactory.build(f -> {
+            f.setPassword("");
+            f.setPasswordConfirmation("");
+        });
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
-        assertTrue(violations.size() >= 1);
+        // password: @NotBlank + @Size(min=6), passwordConfirmation: @NotBlank
+        assertEquals(3, violations.size());
     }
 
     @Test
     public void passwordとpasswordConfirmationが不一致ではバリデーションエラーが発生する() {
-        userForm = UserFormFactory.createUserFormWithMismatchedPassword();
+        var userForm = UserFormFactory.build(f -> f.setPasswordConfirmation("different_password"));
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
-        // validatePasswordConfirmation メソッドは BindingResult を使用するため、
-        // Validator には検証されない
-        assertEquals(0, violations.size());
+        assertEquals(1, violations.size());
+        assertEquals("Passwords do not match", violations.iterator().next().getMessage());
     }
 
     @Test
     public void nicknameが7文字以上ではバリデーションエラーが発生する() {
-        userForm = UserFormFactory.createUserFormWithName("abc");
+        var userForm = UserFormFactory.build(f -> f.setName("abc"));
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
-        // ニックネームの長さ検証はアノテーションで定義されていない
         assertEquals(0, violations.size());
     }
 
     @Test
     public void emailはアットマークを含まないとバリデーションエラーが発生する() {
-        userForm = UserFormFactory.createUserFormWithInvalidEmail();
+        var userForm = UserFormFactory.build(f -> f.setEmail("invalid-email"));
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
         assertEquals(1, violations.size());
-        assertEquals("有効なメールアドレスを入力してください", violations.iterator().next().getMessage());
+        assertEquals("Please enter a valid email address", violations.iterator().next().getMessage());
     }
 
     @Test
     public void passwordが5文字以下ではバリデーションエラーが発生する() {
-        userForm = UserFormFactory.createUserFormWithShortPassword();
+        var userForm = UserFormFactory.build(f -> {
+            f.setPassword("12345");
+            f.setPasswordConfirmation("12345");
+        });
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
         assertEquals(1, violations.size());
-        assertEquals("パスワードは6文字以上で入力してください", violations.iterator().next().getMessage());
+        assertEquals("Password must be at least 6 characters", violations.iterator().next().getMessage());
     }
 
     @Test
     public void passwordが129文字以上ではバリデーションエラーが発生する() {
-        userForm = UserFormFactory.createUserFormWithLongPassword();
+        String longPassword = "a".repeat(130);
+        var userForm = UserFormFactory.build(f -> {
+            f.setPassword(longPassword);
+            f.setPasswordConfirmation(longPassword);
+        });
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
-        // 最大長のバリデーションはアノテーションで定義されていない場合がある
-        assertTrue(violations.size() >= 0);
+        assertEquals(0, violations.size());
     }
 }
