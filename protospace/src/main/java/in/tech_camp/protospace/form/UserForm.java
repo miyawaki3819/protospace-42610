@@ -1,7 +1,5 @@
 package in.tech_camp.protospace.form;
 
-import org.springframework.validation.BindingResult;
-
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -27,12 +25,6 @@ public class UserForm {
     @AssertTrue(message = "Passwords do not match")
     public boolean isPasswordConfirmationValid() {
         return password == null || password.equals(passwordConfirmation);
-    }
-
-    public void validatePasswordConfirmation(BindingResult result) {
-        if (!password.equals(passwordConfirmation)) {
-            result.rejectValue("passwordConfirmation", "error.user", "Passwords do not match");
-        }
     }
 
     @NotBlank(message = "Profile is required")

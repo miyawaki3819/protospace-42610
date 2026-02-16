@@ -77,16 +77,6 @@ class UserControllerTest {
             String result = userController.showLogin();
             assertThat(result, is("users/login"));
         }
-
-        @Test
-        void login_ログインが成功しトップページにリダイレクトされる() {
-            assertThat(userController, notNullValue());
-        }
-
-        @Test
-        void logout_ログアウトが成功しトップページにリダイレクトされる() {
-            assertThat(userController, notNullValue());
-        }
     }
 
     @Nested
@@ -199,31 +189,6 @@ class UserControllerTest {
             assertThat(result, is("users/signUp"));
 
             verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
-        }
-
-        @Test
-        void login_パスワードが一致しない場合() {
-            assertThat(userController, notNullValue());
-        }
-
-        @Test
-        void login_メールアドレス形式が不正な場合() {
-            assertThat(userController, notNullValue());
-        }
-
-        @Test
-        void login_ユーザーが存在しない場合() {
-            assertThat(userController, notNullValue());
-        }
-
-        @Test
-        void login_ログイン中にログインページへアクセスした場合トップページへリダイレクトされる() {
-            assertThat(userController, notNullValue());
-        }
-
-        @Test
-        void login_必須項目が空の場合() {
-            assertThat(userController, notNullValue());
         }
     }
 }
