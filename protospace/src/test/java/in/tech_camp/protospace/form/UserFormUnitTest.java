@@ -31,6 +31,17 @@ public class UserFormUnitTest {
     }
 
     @Test
+    public void プロフィールと所属と役職が入力されていればバリデーションを通過する() {
+        var userForm = UserFormFactory.build(f -> {
+            f.setProfile("エンジニアです。よろしくお願いします。");
+            f.setOccupation("開発部");
+            f.setPosition("シニアエンジニア");
+        });
+        Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
+        assertEquals(0, violations.size());
+    }
+
+    @Test
     public void nicknameが空の場合バリデーションエラーが発生する() {
         var userForm = UserFormFactory.build(f -> f.setName(""));
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
@@ -66,13 +77,6 @@ public class UserFormUnitTest {
     }
 
     @Test
-    public void nicknameが7文字以上ではバリデーションエラーが発生する() {
-        var userForm = UserFormFactory.build(f -> f.setName("abc"));
-        Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
-        assertEquals(0, violations.size());
-    }
-
-    @Test
     public void emailはアットマークを含まないとバリデーションエラーが発生する() {
         var userForm = UserFormFactory.build(f -> f.setEmail("invalid-email"));
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
@@ -100,5 +104,29 @@ public class UserFormUnitTest {
         });
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
         assertEquals(0, violations.size());
+    }
+
+    @Test
+    public void プロフィールが空の場合バリデーションエラーが発生する() {
+        var userForm = UserFormFactory.build(f -> f.setProfile(""));
+        Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
+        assertEquals(1, violations.size());
+        assertEquals("Profile is required", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    public void 所属が空の場合バリデーションエラーが発生する() {
+        var userForm = UserFormFactory.build(f -> f.setOccupation(""));
+        Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
+        assertEquals(1, violations.size());
+        assertEquals("Occupation is required", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    public void 役職が空の場合バリデーションエラーが発生する() {
+        var userForm = UserFormFactory.build(f -> f.setPosition(""));
+        Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
+        assertEquals(1, violations.size());
+        assertEquals("Position is required", violations.iterator().next().getMessage());
     }
 }

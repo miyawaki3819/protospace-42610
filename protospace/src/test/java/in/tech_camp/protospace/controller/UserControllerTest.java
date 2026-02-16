@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import org.mockito.ArgumentCaptor;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
@@ -70,6 +71,27 @@ class UserControllerTest {
             verify(userRepository, times(1)).existsByEmail(userForm.getEmail());
             verify(userService, times(1)).createUserWithEncryptedPassword(any(UserEntity.class));
             verify(securityService, times(1)).autoLogin(userForm.getEmail());
+        }
+
+        @Test
+        void create_プロフィールと所属と役職を入力した場合に登録が成功しUserEntityに正しく設定される() {
+            UserForm userForm = UserFormFactory.build(f -> {
+                f.setProfile("エンジニアです。よろしくお願いします。");
+                f.setOccupation("開発部");
+                f.setPosition("シニアエンジニア");
+            });
+            BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
+            when(userRepository.existsByEmail(userForm.getEmail())).thenReturn(false);
+
+            ArgumentCaptor<UserEntity> entityCaptor = ArgumentCaptor.forClass(UserEntity.class);
+            String result = userController.createUser(userForm, bindingResult, model);
+
+            assertThat(result, is("redirect:/"));
+            verify(userService, times(1)).createUserWithEncryptedPassword(entityCaptor.capture());
+            UserEntity captured = entityCaptor.getValue();
+            assertThat(captured.getProfile(), is("エンジニアです。よろしくお願いします。"));
+            assertThat(captured.getOccupation(), is("開発部"));
+            assertThat(captured.getPosition(), is("シニアエンジニア"));
         }
 
         @Test
