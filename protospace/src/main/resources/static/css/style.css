@@ -18,6 +18,9 @@ div {
 body {
   font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN W3", sans-serif;
   color: #3b4043;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 li {
@@ -69,18 +72,6 @@ a {
   background: #87cefa;
 }
 
-.nav__logout {
-  display: inline-block;
-  padding: 0.4em 1.6em;
-  font-size: 0.8em;
-  color: #87cefa;
-  text-decoration: none;
-  user-select: none;
-}
-.nav__logout:hover {
-  opacity: 0.5;
-}
-
 /* フォーム周り */
 .form__wrapper {
   min-height: calc(100vh - 161px);
@@ -118,6 +109,10 @@ a {
 }
 
 /* メイン */
+
+.main {
+  flex: 1;
+}
 
 .greeting {
   margin-bottom: 20px;
@@ -281,6 +276,7 @@ input[type="submit"].prototype__btn {
 .footer {
   background-color: #999;
   padding: 10px 0;
+  margin-top: auto;
 }
 .copyright {
   text-align: center;

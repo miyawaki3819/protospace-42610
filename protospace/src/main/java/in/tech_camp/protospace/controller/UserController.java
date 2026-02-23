@@ -1,0 +1,59 @@
+package in.tech_camp.protospace.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import in.tech_camp.protospace.form.UserForm;
+import in.tech_camp.protospace.repository.UserRepository;
+import in.tech_camp.protospace.service.SecurityService;
+import in.tech_camp.protospace.service.UserService;
+import lombok.AllArgsConstructor;
+
+@Controller
+@AllArgsConstructor
+public class UserController {
+
+  private final UserRepository userRepository;
+  private final UserService userService;
+
+  @GetMapping("/users/sign_up")
+  public String signUpForm(Model model) {
+    model.addAttribute("userForm", new UserForm());
+    return "users/signUp";
+  }
+
+  @Autowired
+  private SecurityService securityService;
+
+  @PostMapping("/users")
+  public String createUser(
+      @ModelAttribute("userForm") @Validated UserForm userForm,
+      BindingResult result,
+      Model model) {
+
+    if (userRepository.existsByEmail(userForm.getEmail())) {
+      result.rejectValue("email", "email.duplicate", "Email already exists");
+    }
+
+    if (result.hasErrors()) {
+      return "users/signUp";
+    }
+
+    userService.createUser(userForm);
+
+    securityService.autoLogin(userForm.getEmail(), userForm.getPassword());
+
+    return "redirect:/";
+  }
+
+  @GetMapping("/users/login")
+  public String showLogin() {
+    return "users/login";
+  }
+}

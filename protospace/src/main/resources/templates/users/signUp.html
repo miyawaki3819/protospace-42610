@@ -14,14 +14,14 @@
           <h2 class="page-heading">ユーザー新規登録</h2>
 
           <form
-            th:action="@{/user}"
+            th:action="@{/users}"
             th:object="${userForm}"
             th:method="post"
             class="form__new"
           >
             <div class="field">
               <label for="user_name">ユーザー名</label><br />
-              <input type="text" id="user_name" />
+              <input type="text" id="user_name" th:field="*{name}" />
             </div>
 
             <div class="field">
@@ -29,7 +29,8 @@
               <input
                 type="email"
                 id="user_email"
-                autofocus
+                th:field="*{email}"
+                autofocus="autofocus"
                 autocomplete="email"
               />
             </div>
@@ -39,33 +40,34 @@
               <input
                 type="password"
                 id="user_password"
+                th:field="*{password}"
                 autocomplete="new-password"
               />
             </div>
 
             <div class="field">
-              <label for="user_password_confirmation">パスワード再入力</label
-              ><br />
+              <label for="user_password_confirmation">パスワード再入力</label><br />
               <input
                 type="password"
                 id="user_password_confirmation"
+                th:field="*{passwordConfirmation}"
                 autocomplete="new-password"
               />
             </div>
 
             <div class="field">
               <label for="user_profile">プロフィール</label><br />
-              <textarea class="form__text" id="user_profile"></textarea>
+              <textarea class="form__text" id="user_profile" th:field="*{profile}"></textarea>
             </div>
 
             <div class="field">
               <label for="user_occupation">所属</label><br />
-              <textarea class="form__text" id="user_occupation"></textarea>
+              <input type="text" id="user_occupation" th:field="*{occupation}" />
             </div>
 
             <div class="field">
               <label for="user_position">役職</label><br />
-              <textarea class="form__text" id="user_position"></textarea>
+              <input type="text" id="user_position" th:field="*{position}" />
             </div>
 
             <div class="actions">
@@ -75,5 +77,6 @@
         </div>
       </div>
     </div>
+    <div th:insert="~{footer :: footer}"></div>
   </body>
 </html>
