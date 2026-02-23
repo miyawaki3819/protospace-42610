@@ -11,7 +11,13 @@
     <div class="main">
         <div class="inner">
             <div sec:authorize="isAuthenticated()">
-                <h1>こんにちは、<span th:text="${#authentication.principal.user.name}"></span>さん</h1>
+                <div class="greeting">
+                    <p>
+                        こんにちは、
+                        <a th:href="@{/}" th:text="${#authentication.principal.user.name}">ユーザー名</a>
+                        さん
+                    </p>
+                </div>
             </div>
         </div>
     </div>

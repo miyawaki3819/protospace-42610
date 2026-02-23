@@ -14,7 +14,7 @@
       </div>
 
       <div class="nav__right" th:if="${#authorization.expression('!isAuthenticated()')}">
-        <a th:href="@{/login}" class="nav__btn">ログイン</a>
+        <a th:href="@{/users/login}" class="nav__btn">ログイン</a>
         <a th:href="@{/users/sign_up}" class="nav__btn">新規登録</a>
       </div>
     </div>

@@ -59,13 +59,22 @@ public class UserFormUnitTest {
 
     @Test
     public void passwordが空の場合バリデーションエラーが発生する() {
+        // @GroupSequence により第1グループ（必須）のみ実行され、1件のエラーのみ検証する
         var userForm = UserFormFactory.build(f -> {
             f.setPassword("");
-            f.setPasswordConfirmation("");
+            f.setPasswordConfirmation("dummy"); // 空でない値にして password の NotBlank のみ違反になるようにする
         });
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
-        // password: @NotBlank + @Size(min=6), passwordConfirmation: @NotBlank
-        assertEquals(3, violations.size());
+        assertEquals(1, violations.size());
+        assertEquals("Password is required", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    public void passwordConfirmationが空の場合バリデーションエラーが発生する() {
+        var userForm = UserFormFactory.build(f -> f.setPasswordConfirmation(""));
+        Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
+        assertEquals(1, violations.size());
+        assertEquals("Password confirmation is required", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -92,7 +101,7 @@ public class UserFormUnitTest {
         });
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
         assertEquals(1, violations.size());
-        assertEquals("Password must be at least 6 characters", violations.iterator().next().getMessage());
+        assertEquals("Password must be 6 to 128 characters", violations.iterator().next().getMessage());
     }
 
     @Test
@@ -103,7 +112,8 @@ public class UserFormUnitTest {
             f.setPasswordConfirmation(longPassword);
         });
         Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
-        assertEquals(0, violations.size());
+        assertEquals(1, violations.size());
+        assertEquals("Password must be 6 to 128 characters", violations.iterator().next().getMessage());
     }
 
     @Test

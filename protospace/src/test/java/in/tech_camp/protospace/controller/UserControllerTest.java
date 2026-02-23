@@ -1,6 +1,5 @@
 package in.tech_camp.protospace.controller;
 
-import in.tech_camp.protospace.entity.UserEntity;
 import in.tech_camp.protospace.form.UserForm;
 import in.tech_camp.protospace.repository.UserRepository;
 import in.tech_camp.protospace.service.SecurityService;
@@ -69,12 +68,12 @@ class UserControllerTest {
             assertThat(result, is("redirect:/"));
 
             verify(userRepository, times(1)).existsByEmail(userForm.getEmail());
-            verify(userService, times(1)).createUserWithEncryptedPassword(any(UserEntity.class));
-            verify(securityService, times(1)).autoLogin(userForm.getEmail());
+            verify(userService, times(1)).createUser(any(UserForm.class));
+            verify(securityService, times(1)).autoLogin(userForm.getEmail(), userForm.getPassword());
         }
 
         @Test
-        void create_プロフィールと所属と役職を入力した場合に登録が成功しUserEntityに正しく設定される() {
+        void create_プロフィールと所属と役職を入力した場合に登録が成功しUserFormが正しくサービスに渡される() {
             UserForm userForm = UserFormFactory.build(f -> {
                 f.setProfile("エンジニアです。よろしくお願いします。");
                 f.setOccupation("開発部");
@@ -83,12 +82,12 @@ class UserControllerTest {
             BindingResult bindingResult = new BeanPropertyBindingResult(userForm, "userForm");
             when(userRepository.existsByEmail(userForm.getEmail())).thenReturn(false);
 
-            ArgumentCaptor<UserEntity> entityCaptor = ArgumentCaptor.forClass(UserEntity.class);
+            ArgumentCaptor<UserForm> formCaptor = ArgumentCaptor.forClass(UserForm.class);
             String result = userController.createUser(userForm, bindingResult, model);
 
             assertThat(result, is("redirect:/"));
-            verify(userService, times(1)).createUserWithEncryptedPassword(entityCaptor.capture());
-            UserEntity captured = entityCaptor.getValue();
+            verify(userService, times(1)).createUser(formCaptor.capture());
+            UserForm captured = formCaptor.getValue();
             assertThat(captured.getProfile(), is("エンジニアです。よろしくお願いします。"));
             assertThat(captured.getOccupation(), is("開発部"));
             assertThat(captured.getPosition(), is("シニアエンジニア"));
@@ -113,7 +112,7 @@ class UserControllerTest {
             String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
-            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+            verify(userService, never()).createUser(any(UserForm.class));
         }
 
         @Test
@@ -125,7 +124,7 @@ class UserControllerTest {
             String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
-            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+            verify(userService, never()).createUser(any(UserForm.class));
         }
 
         @Test
@@ -140,7 +139,7 @@ class UserControllerTest {
             String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
-            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+            verify(userService, never()).createUser(any(UserForm.class));
         }
 
         @Test
@@ -153,8 +152,8 @@ class UserControllerTest {
             assertThat(result, is("users/signUp"));
 
             verify(userRepository, times(1)).existsByEmail("existing@example.com");
-            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
-            verify(securityService, never()).autoLogin(anyString());
+            verify(userService, never()).createUser(any(UserForm.class));
+            verify(securityService, never()).autoLogin(anyString(), anyString());
         }
 
         @Test
@@ -174,7 +173,7 @@ class UserControllerTest {
             String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
-            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+            verify(userService, never()).createUser(any(UserForm.class));
         }
 
         @Test
@@ -186,7 +185,7 @@ class UserControllerTest {
             String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
-            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+            verify(userService, never()).createUser(any(UserForm.class));
         }
 
         @Test
@@ -198,7 +197,7 @@ class UserControllerTest {
             String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
-            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+            verify(userService, never()).createUser(any(UserForm.class));
         }
 
         @Test
@@ -210,7 +209,7 @@ class UserControllerTest {
             String result = userController.createUser(userForm, bindingResult, model);
             assertThat(result, is("users/signUp"));
 
-            verify(userService, never()).createUserWithEncryptedPassword(any(UserEntity.class));
+            verify(userService, never()).createUser(any(UserForm.class));
         }
     }
 }
