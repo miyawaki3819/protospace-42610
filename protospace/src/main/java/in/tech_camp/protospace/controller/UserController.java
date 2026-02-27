@@ -49,7 +49,7 @@ public class UserController {
 
     securityService.autoLogin(userForm.getEmail(), userForm.getPassword());
 
-    return "redirect:/";
+    return "redirect:/prototypes/";
   }
 
   @GetMapping("/users/login")

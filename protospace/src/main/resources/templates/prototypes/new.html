@@ -9,9 +9,9 @@
     <div th:insert="~{header :: header}"></div>
     <div class="main">
       <div class="inner">
-        <div class="form__wrapper">
+        <div class="form__wrapper" th:object="${prototypeForm}">
           <h2 class="page-heading">新規プロトタイプ投稿</h2>
-          <!-- 部分テンプレートでフォームを表示する -->
+          <div th:replace="~{prototypes/form :: form(@{/prototypes})}"></div>
         </div>
       </div>
     </div>

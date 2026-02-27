@@ -22,6 +22,7 @@
               method="post"
               class="prototype__btn delete-btn"
             >
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
               <input
                 type="submit"
                 class="prototype__btn delete-btn"
@@ -31,7 +32,11 @@
             <!-- プロトタイプの投稿者とログインしているユーザーが同じであれば上記を表示する -->
           </div>
           <div class="prototype__image">
-            <img alt="プロトタイプの画像" />
+            <img
+              th:if="${prototype != null && prototype.imageData != null}"
+              th:src="@{/prototypes/{id}/image(id=${prototype.id})}"
+              alt="プロトタイプの画像"
+            />
           </div>
           <div class="prototype__body">
             <div class="prototype__detail">
@@ -47,6 +52,7 @@
             <!-- ログインしているユーザーには以下のコメント投稿フォームを表示する -->
             <div>
               <form th:action="@{/}" method="post" th:object="${commentForm}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 <div class="field">
                   <label for="content">コメント</label><br />
                   <input type="text" id="text" />
