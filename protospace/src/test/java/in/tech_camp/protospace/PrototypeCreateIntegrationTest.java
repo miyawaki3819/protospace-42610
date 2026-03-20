@@ -2,14 +2,13 @@ package in.tech_camp.protospace;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-import in.tech_camp.protospace.entity.PrototypeEntity;
 import in.tech_camp.protospace.entity.UserEntity;
 import in.tech_camp.protospace.factory.PrototypeFormFactory;
 import in.tech_camp.protospace.form.PrototypeForm;
@@ -19,7 +18,6 @@ import in.tech_camp.protospace.service.PrototypeService;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestDatabaseConfiguration.class)
 class PrototypeCreateIntegrationTest {
 
     @Autowired
@@ -31,6 +29,13 @@ class PrototypeCreateIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    protected PrototypeForm form;
+
+    @BeforeEach
+    void setUpForm() {
+        form = PrototypeFormFactory.build();
+    }
+
     @Nested
     class 正常系 {
 
@@ -40,9 +45,7 @@ class PrototypeCreateIntegrationTest {
 
             int countBefore = prototypeRepository.findAll().size();
 
-            PrototypeForm form = PrototypeFormFactory.build();
-            PrototypeEntity entity = form.toEntity(user.getId());
-            prototypeService.createPrototype(entity);
+            prototypeService.createFromForm(form, user.getId());
 
             int countAfter = prototypeRepository.findAll().size();
             assertEquals(countBefore + 1, countAfter, "投稿後にプロトタイプの件数が1件増えること");

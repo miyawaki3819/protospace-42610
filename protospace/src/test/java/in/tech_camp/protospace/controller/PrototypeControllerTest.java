@@ -1,13 +1,19 @@
 package in.tech_camp.protospace.controller;
 
-import in.tech_camp.protospace.SecurityConfig;
-import in.tech_camp.protospace.custom_user.CustomUserDetail;
-import in.tech_camp.protospace.entity.PrototypeEntity;
-import in.tech_camp.protospace.entity.UserEntity;
-import in.tech_camp.protospace.factory.PrototypeFormFactory;
-import in.tech_camp.protospace.service.CustomUserDetailsService;
+import java.util.Collections;
+import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -15,23 +21,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.Collections;
-import java.util.List;
-
-import org.mockito.ArgumentCaptor;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -41,6 +34,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+
+import in.tech_camp.protospace.SecurityConfig;
+import in.tech_camp.protospace.custom_user.CustomUserDetail;
+import in.tech_camp.protospace.entity.PrototypeEntity;
+import in.tech_camp.protospace.entity.UserEntity;
+import in.tech_camp.protospace.factory.PrototypeFormFactory;
+import in.tech_camp.protospace.form.PrototypeForm;
+import in.tech_camp.protospace.service.CustomUserDetailsService;
 
 @WebMvcTest(controllers = PrototypeController.class)
 @Import(SecurityConfig.class)
@@ -61,6 +62,19 @@ class PrototypeControllerTest {
 
     @MockBean
     protected in.tech_camp.protospace.repository.UserRepository userRepository;
+
+    protected PrototypeForm form;
+    protected MockMultipartFile imageFile;
+
+    @BeforeEach
+    void setUpForm() {
+        form = PrototypeFormFactory.build();
+        imageFile = new MockMultipartFile(
+                "imageFile",
+                "test.jpg",
+                "image/jpeg",
+                "dummy".getBytes());
+    }
 
     protected Authentication authWithUserId(int userId) {
         UserEntity userEntity = new UserEntity();
@@ -134,13 +148,6 @@ class PrototypeControllerTest {
 
         @Test
         void create_認証済みで投稿が成功しトップへリダイレクトされる() throws Exception {
-            var form = PrototypeFormFactory.build();
-            MockMultipartFile imageFile = new MockMultipartFile(
-                    "imageFile",
-                    "test.jpg",
-                    "image/jpeg",
-                    "dummy".getBytes());
-
             mockMvc.perform(multipart("/prototypes")
                             .file(imageFile)
                             .param("title", form.getTitle())
@@ -149,45 +156,46 @@ class PrototypeControllerTest {
                             .with(authentication(authWithUserId(1)))
                             .with(csrf()))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/prototypes/"));
+                    .andExpect(redirectedUrl("/"));
 
-            verify(prototypeService).createPrototype(any(PrototypeEntity.class));
+            verify(prototypeService).createFromForm(any(PrototypeForm.class), any(Integer.class));
         }
 
         @Test
         void create_投稿が成功しデータが正しくサービスに渡されて保存される() throws Exception {
-            var form = PrototypeFormFactory.build(f -> {
+            form = PrototypeFormFactory.build(f -> {
                 f.setTitle("テストタイトル");
                 f.setCatchCopy("キャッチコピー");
                 f.setConcept("コンセプト説明");
             });
-            MockMultipartFile imageFile = new MockMultipartFile(
+            MockMultipartFile customImageFile = new MockMultipartFile(
                     "imageFile",
                     "my-image.jpg",
                     "image/jpeg",
                     "image bytes".getBytes());
-            form.setImageFile(imageFile);
+            form.setImageFile(customImageFile);
 
             mockMvc.perform(multipart("/prototypes")
-                            .file(imageFile)
+                            .file(customImageFile)
                             .param("title", form.getTitle())
                             .param("catchCopy", form.getCatchCopy())
                             .param("concept", form.getConcept())
                             .with(authentication(authWithUserId(42)))
                             .with(csrf()))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/prototypes/"));
+                    .andExpect(redirectedUrl("/"));
 
-            ArgumentCaptor<PrototypeEntity> entityCaptor = ArgumentCaptor.forClass(PrototypeEntity.class);
-            verify(prototypeService).createPrototype(entityCaptor.capture());
-            PrototypeEntity captured = entityCaptor.getValue();
-            assertThat(captured.getTitle(), is("テストタイトル"));
-            assertThat(captured.getCatchCopy(), is("キャッチコピー"));
-            assertThat(captured.getConcept(), is("コンセプト説明"));
-            assertThat(captured.getUserId(), is(42));
-            assertThat(captured.getImageName(), is("my-image.jpg"));
-            assertThat(captured.getImageType(), is("image/jpeg"));
-            assertArrayEquals("image bytes".getBytes(), captured.getImageData());
+            ArgumentCaptor<PrototypeForm> formCaptor = ArgumentCaptor.forClass(PrototypeForm.class);
+            ArgumentCaptor<Integer> userIdCaptor = ArgumentCaptor.forClass(Integer.class);
+            verify(prototypeService).createFromForm(formCaptor.capture(), userIdCaptor.capture());
+            PrototypeForm capturedForm = formCaptor.getValue();
+            assertThat(capturedForm.getTitle(), is("テストタイトル"));
+            assertThat(capturedForm.getCatchCopy(), is("キャッチコピー"));
+            assertThat(capturedForm.getConcept(), is("コンセプト説明"));
+            assertThat(userIdCaptor.getValue(), is(42));
+            assertThat(capturedForm.getImageFile().getOriginalFilename(), is("my-image.jpg"));
+            assertThat(capturedForm.getImageFile().getContentType(), is("image/jpeg"));
+            assertArrayEquals("image bytes".getBytes(), capturedForm.getImageFile().getBytes());
         }
 
         @Test
@@ -214,10 +222,6 @@ class PrototypeControllerTest {
 
         @Test
         void create_未認証で投稿するとログインへリダイレクトされる() throws Exception {
-            var form = PrototypeFormFactory.build();
-            MockMultipartFile imageFile = new MockMultipartFile(
-                    "imageFile", "test.jpg", "image/jpeg", "dummy".getBytes());
-
             mockMvc.perform(multipart("/prototypes")
                             .file(imageFile)
                             .param("title", form.getTitle())
@@ -227,14 +231,11 @@ class PrototypeControllerTest {
                     .andExpect(status().is3xxRedirection())
                     .andExpect(redirectedUrlPattern("**/users/login"));
 
-            verify(prototypeService, never()).createPrototype(any(PrototypeEntity.class));
+            verify(prototypeService, never()).createFromForm(any(PrototypeForm.class), any(Integer.class));
         }
 
         @Test
         void create_バリデーションエラー時は新規作成フォームに戻る() throws Exception {
-            MockMultipartFile imageFile = new MockMultipartFile(
-                    "imageFile", "test.jpg", "image/jpeg", "dummy".getBytes());
-
             mockMvc.perform(multipart("/prototypes")
                             .file(imageFile)
                             .param("title", "")
@@ -246,7 +247,7 @@ class PrototypeControllerTest {
                     .andExpect(view().name("prototypes/new"))
                     .andExpect(model().attributeHasFieldErrors("prototypeForm", "title"));
 
-            verify(prototypeService, never()).createPrototype(any(PrototypeEntity.class));
+            verify(prototypeService, never()).createFromForm(any(PrototypeForm.class), any(Integer.class));
         }
 
         @Test

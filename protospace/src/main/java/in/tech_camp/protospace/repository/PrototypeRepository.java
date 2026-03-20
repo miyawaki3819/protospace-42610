@@ -15,23 +15,15 @@ import in.tech_camp.protospace.entity.PrototypeEntity;
 @Mapper
 public interface PrototypeRepository {
 
-  @Select("SELECT id, title, catch_copy, concept, image_name, image_type, image_data, user_id FROM prototypes")
+  @Select("SELECT * FROM prototypes")
   @Results(value = {
-    @Result(property = "userId", column = "user_id"),
-    @Result(property = "imageName", column = "image_name"),
-    @Result(property = "imageType", column = "image_type"),
-    @Result(property = "imageData", column = "image_data"),
     @Result(property = "user", column = "user_id",
             one = @One(select = "in.tech_camp.protospace.repository.UserRepository.findById"))
   })
   List<PrototypeEntity> findAll();
 
-  @Select("SELECT id, title, catch_copy, concept, image_name, image_type, image_data, user_id FROM prototypes WHERE id = #{id}")
+  @Select("SELECT * FROM prototypes WHERE id = #{id}")
   @Results(value = {
-    @Result(property = "userId", column = "user_id"),
-    @Result(property = "imageName", column = "image_name"),
-    @Result(property = "imageType", column = "image_type"),
-    @Result(property = "imageData", column = "image_data"),
     @Result(property = "user", column = "user_id",
             one = @One(select = "in.tech_camp.protospace.repository.UserRepository.findById"))
   })

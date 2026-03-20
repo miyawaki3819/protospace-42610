@@ -12,8 +12,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.RegexRequestMatcher;
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -34,8 +32,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/login"))
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("/css/**", "/images/**", "/", "/prototypes/", "/users/sign_up", "/users/login").permitAll()
-                        .requestMatchers(new RegexRequestMatcher("/prototypes/\\d+/image", "GET")).permitAll()
+                        .requestMatchers("/css/**", "/images/**", "/", "/prototypes/", "/prototypes/*/image", "/users/sign_up", "/users/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
                         .requestMatchers("/prototypes/new").authenticated()
@@ -44,14 +41,14 @@ public class SecurityConfig {
                 .formLogin(login -> login
                         .loginProcessingUrl("/login")
                         .loginPage("/users/login")
-                        .defaultSuccessUrl("/prototypes/", true)
+                        .defaultSuccessUrl("/prototypes", true)
                         .failureUrl("/users/login?error")
                         .usernameParameter("email")
                         .permitAll())
 
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/prototypes/"));
+                        .logoutSuccessUrl("/"));
 
         return http.build();
     }

@@ -1,16 +1,21 @@
 package in.tech_camp.protospace.controller;
 
-import in.tech_camp.protospace.form.UserForm;
-import in.tech_camp.protospace.repository.UserRepository;
-import in.tech_camp.protospace.service.SecurityService;
-import in.tech_camp.protospace.service.UserService;
-import in.tech_camp.protospace.factory.UserFormFactory;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.is;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.ui.ExtendedModelMap;
@@ -18,12 +23,11 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
-import org.mockito.ArgumentCaptor;
+import in.tech_camp.protospace.factory.UserFormFactory;
+import in.tech_camp.protospace.form.UserForm;
+import in.tech_camp.protospace.repository.UserRepository;
+import in.tech_camp.protospace.service.SecurityService;
+import in.tech_camp.protospace.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

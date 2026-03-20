@@ -25,10 +25,8 @@ public interface UserRepository {
   })
   UserEntity findByEmail(String email);
 
-  @Select("SELECT * FROM users WHERE id = #{id}")
+  @Select("SELECT id, name, email, profile, occupation, position FROM users WHERE id = #{id}")
   @Results(value = {
-    @Result(property = "id", column = "id"),
-    @Result(property = "password", column = "encrypted_password"),
     @Result(property = "prototypes", column = "id",
             many = @Many(select = "in.tech_camp.protospace.repository.PrototypeRepository.findByUserId"))
   })

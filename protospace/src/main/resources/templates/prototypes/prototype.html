@@ -1,15 +1,15 @@
 <div xmlns:th="http://www.thymeleaf.org" th:fragment="content(prototype)">
-  <a th:href="@{/}" class="card__img">
+  <a th:href="@{/prototypes}" class="card__img">
     <img
-      th:if="${prototype.imageData != null}"
+      th:if="${prototype.imageName != null && !prototype.imageName.isEmpty()}"
       th:src="@{/prototypes/{id}/image(id=${prototype.id})}"
       alt="プロトタイプの画像"
       class="card__img"
     />
   </a>
   <div class="card__body">
-    <a th:href="@{/}" class="card__title" th:text="${prototype.title}"></a>
+    <a th:href="@{/prototypes}" class="card__title" th:text="${prototype.title}"></a>
     <p class="card__summary" th:text="${prototype.catchCopy}"></p>
-    <a th:href="@{/}" class="card__user" th:text="${prototype.user != null ? prototype.user.name : ''}"></a>
+    <a th:href="@{/prototypes}" class="card__user" th:text="${prototype.user != null ? prototype.user.name : ''}"></a>
   </div>
 </div>

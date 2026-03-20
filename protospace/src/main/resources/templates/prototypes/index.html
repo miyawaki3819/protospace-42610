@@ -13,7 +13,7 @@
         <div class="greeting" sec:authorize="isAuthenticated()">
           <p>
             こんにちは、
-            <a th:href="@{/}" th:text="${#authentication.principal.user.name}">ユーザー名</a>
+            <a th:href="@{/prototypes}" th:text="${#authentication.principal.user.name}">ユーザー名</a>
             さん
           </p>
         </div>

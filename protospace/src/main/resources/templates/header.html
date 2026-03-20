@@ -1,4 +1,4 @@
-<header xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:fragment="header" class="header">
+<header xmlns:th="http://www.thymeleaf.org" th:fragment="header" class="header">
   <div class="inner">
     <div class="nav">
       <div class="nav__left">
@@ -6,15 +6,14 @@
           <img th:src="@{/images/logo.png}" class="logo" alt="Logo" />
         </a>
       </div>
-      <div class="nav__right" sec:authorize="isAuthenticated()">
+      <div class="nav__right" th:if="${#authorization.expression('isAuthenticated()')}">
         <form th:action="@{/logout}" th:method="post" style="display:inline-block">
-          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
           <input class="form__btn" type="submit" value="ログアウト"/>
         </form>
         <a th:href="@{/prototypes/new}" class="nav__btn">New Proto</a>
       </div>
 
-      <div class="nav__right" sec:authorize="!isAuthenticated()">
+      <div class="nav__right" th:unless="${#authorization.expression('isAuthenticated()')}">
         <a th:href="@{/users/login}" class="nav__btn">ログイン</a>
         <a th:href="@{/users/sign_up}" class="nav__btn">新規登録</a>
       </div>
