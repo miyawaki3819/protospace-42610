@@ -24,36 +24,4 @@ public class PrototypeForm {
     @NotNull(message = "ImageFile can't be blank", groups = {ValidationPriority1.class})
     @ValidImage(message = "Invalid image file", groups = {ValidationPriority1.class, ValidationPriority2.class})
     private MultipartFile imageFile;
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getCatchCopy() {
-        return catchCopy;
-    }
-
-    public void setCatchCopy(String catchCopy) {
-        this.catchCopy = catchCopy;
-    }
-
-    public String getConcept() {
-        return concept;
-    }
-
-    public void setConcept(String concept) {
-        this.concept = concept;
-    }
-
-    public MultipartFile getImageFile() {
-        return imageFile;
-    }
-
-    public void setImageFile(MultipartFile imageFile) {
-        this.imageFile = imageFile;
-    }
 }

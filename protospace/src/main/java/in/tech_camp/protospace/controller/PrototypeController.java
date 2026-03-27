@@ -37,11 +37,16 @@ public class PrototypeController {
         this.prototypeRepository = prototypeRepository;
     }
 
-    @GetMapping({"/prototypes"})
+    @GetMapping("/prototypes")
     public String index(Model model) {
         List<PrototypeEntity> prototypes = prototypeRepository.findAll();
         model.addAttribute("prototypes", prototypes);
         return "prototypes/index";
+    }
+
+    @GetMapping("/prototypes/")
+    public String indexWithSlash(Model model) {
+        return index(model);
     }
 
     @GetMapping("/prototypes/new")
@@ -50,7 +55,7 @@ public class PrototypeController {
         return "prototypes/new";
     }
 
-    @PostMapping({"/prototypes"})
+    @PostMapping("/prototypes")
     public String create(
             @ModelAttribute("prototypeForm") @Validated(ValidationPriority1.class) PrototypeForm prototypeForm,
             BindingResult result,
@@ -75,7 +80,16 @@ public class PrototypeController {
             return "redirect:/";
         }
 
-        return "redirect:/prototypes";
+        return "redirect:/";
+    }
+
+    @PostMapping("/prototypes/")
+    public String createWithSlash(
+            @ModelAttribute("prototypeForm") @Validated(ValidationPriority1.class) PrototypeForm prototypeForm,
+            BindingResult result,
+            @AuthenticationPrincipal CustomUserDetail userDetail,
+            Model model) throws IOException {
+        return create(prototypeForm, result, userDetail, model);
     }
 
     @GetMapping("/prototypes/{id}/image")

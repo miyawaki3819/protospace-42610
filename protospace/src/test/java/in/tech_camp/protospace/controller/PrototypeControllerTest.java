@@ -86,16 +86,18 @@ class PrototypeControllerTest {
     }
 
     protected static PrototypeEntity prototypeEntity(int id, int userId) {
-        PrototypeEntity e = new PrototypeEntity();
-        e.setId(id);
-        e.setTitle("タイトル");
-        e.setCatchCopy("キャッチコピー");
-        e.setConcept("コンセプト");
-        e.setUserId(userId);
-        e.setImageName("image.jpg");
-        e.setImageType("image/jpeg");
-        e.setImageData("image data".getBytes());
-        return e;
+        PrototypeEntity prototype = new PrototypeEntity();
+        prototype.setId(id);
+        prototype.setTitle("タイトル");
+        prototype.setCatchCopy("キャッチコピー");
+        prototype.setConcept("コンセプト");
+        UserEntity user = new UserEntity();
+        user.setId(userId);
+        prototype.setUser(user);
+        prototype.setImageName("image.jpg");
+        prototype.setImageType("image/jpeg");
+        prototype.setImageData("image data".getBytes());
+        return prototype;
     }
 
     @Nested

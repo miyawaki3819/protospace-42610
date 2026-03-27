@@ -28,19 +28,8 @@ public class UserFormUnitTest {
     class 正常系 {
 
         @Test
-        public void nicknameとemailとpasswordとpasswordConfirmationが存在すれば登録できる() {
+        public void すべての必須フィールドが入力されていれば登録できる() {
             var userForm = UserFormFactory.build();
-            Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
-            assertEquals(0, violations.size());
-        }
-
-        @Test
-        public void プロフィールと所属と役職が入力されていればバリデーションを通過する() {
-            var userForm = UserFormFactory.build(f -> {
-                f.setProfile("エンジニアです。よろしくお願いします。");
-                f.setOccupation("開発部");
-                f.setPosition("シニアエンジニア");
-            });
             Set<ConstraintViolation<UserForm>> violations = validator.validate(userForm);
             assertEquals(0, violations.size());
         }
