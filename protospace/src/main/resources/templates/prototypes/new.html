@@ -11,7 +11,7 @@
       <div class="inner">
         <div class="form__wrapper">
           <h2 class="page-heading">新規プロトタイプ投稿</h2>
-          <!-- 部分テンプレートでフォームを表示する -->
+          <div th:replace="~{prototypes/form :: form(@{/prototypes}, ${prototypeForm})}"></div>
         </div>
       </div>
     </div>

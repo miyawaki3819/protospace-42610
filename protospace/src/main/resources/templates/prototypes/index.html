@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ja">
   <head>
     <meta charset="UTF-8" />
     <title>Protospace</title>
@@ -10,19 +10,17 @@
 
     <main class="main">
       <div class="inner">
-        <!-- ログインしているときは以下を表示する -->
-        <!-- <div class="greeting">
+        <div class="greeting" sec:authorize="isAuthenticated()">
           <p>
             こんにちは、
-            <a th:href="@{/}">ユーザー名</a>
+            <a th:href="@{/prototypes}" th:text="${#authentication.principal.user.name}">ユーザー名</a>
             さん
           </p>
-        </div> -->
-        <!-- ログインしているときは上記を表示する -->
+        </div>
 
         <div class="card__wrapper">
-          <div class="card">
-            <!-- 投稿機能実装後、部分テンプレートでプロトタイプ投稿一覧を表示する  -->
+          <div th:each="prototype : ${prototypes}" class="card">
+            <div th:replace="~{prototypes/prototype :: content(prototype=${prototype})}"></div>
           </div>
         </div>
       </div>
