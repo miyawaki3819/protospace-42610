@@ -92,23 +92,35 @@ public class PrototypeController {
         return create(prototypeForm, result, userDetail, model);
     }
 
-    @GetMapping("/prototypes/{id}/image")
-    public ResponseEntity<byte[]> getImage(@PathVariable Integer id) {
+    @GetMapping(value = "/prototypes/{id}/image", produces = MediaType.ALL_VALUE)
+    public ResponseEntity<byte[]> getImage(@PathVariable("id") Integer id){
         try {
-        PrototypeEntity prototype = prototypeRepository.findById(id);
-        
-        if (prototype == null || prototype.getImageData() == null) {
-            return ResponseEntity.notFound().build();
-        }
-        
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(prototype.getImageType()));
-        
-        return new ResponseEntity<>(prototype.getImageData(), headers, HttpStatus.OK);
-        
+            PrototypeEntity prototype = prototypeRepository.findById(id);
+
+            if (prototype == null || prototype.getImageData() == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            MediaType contentType;
+            try {
+                if (prototype.getImageType() == null || prototype.getImageType().isBlank()) {
+                    contentType = MediaType.APPLICATION_OCTET_STREAM;
+                } else {
+                    contentType = MediaType.parseMediaType(prototype.getImageType());
+                }
+            } catch (IllegalArgumentException e) {
+                // DBに不正な保存値がある可能性を考慮して、フォールバックのContent-Typeを返す
+                contentType = MediaType.APPLICATION_OCTET_STREAM;
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(contentType)
+                    .contentLength(prototype.getImageData().length)
+                    .body(prototype.getImageData());
+
         } catch (Exception e) {
-        System.out.println("画像取得エラー：" + e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            System.out.println("画像取得エラー：" + e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }
