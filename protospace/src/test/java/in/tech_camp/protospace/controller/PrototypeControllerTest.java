@@ -4,7 +4,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -122,6 +124,21 @@ class PrototypeControllerTest {
         }
 
         @Test
+        void 未ログイン状態ではトップページにログインボタンが表示される() throws Exception {
+            when(prototypeRepository.findAll()).thenReturn(Collections.emptyList());
+
+            mockMvc.perform(get("/prototypes/"))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("prototypes/index"))
+                    .andExpect(model().attributeExists("prototypes"))
+                    .andExpect(content().string(containsString("ログイン")))
+                    .andExpect(content().string(containsString("新規登録")))
+                    .andExpect(content().string(not(containsString("ログアウト"))))
+                    .andExpect(content().string(not(containsString("New Proto"))))
+                    .andExpect(content().string(not(containsString("こんにちは"))));
+        }
+
+        @Test
         void ログイン状態でトップページが表示される() throws Exception {
             when(prototypeRepository.findAll()).thenReturn(Collections.emptyList());
             UserEntity userEntity = new UserEntity();
@@ -138,6 +155,28 @@ class PrototypeControllerTest {
         }
 
         @Test
+        void ログイン状態ではトップページにログアウトとNewProtoボタンが表示される() throws Exception {
+            when(prototypeRepository.findAll()).thenReturn(Collections.emptyList());
+            UserEntity userEntity = new UserEntity();
+            userEntity.setName("Test User");
+            userEntity.setEmail("test@example.com");
+            CustomUserDetail userDetails = new CustomUserDetail(userEntity);
+            Authentication auth = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+
+            mockMvc.perform(get("/prototypes/").with(authentication(auth)))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("prototypes/index"))
+                    .andExpect(model().attributeExists("prototypes"))
+                    .andExpect(content().string(containsString("ログアウト")))
+                    .andExpect(content().string(containsString("New Proto")))
+                    .andExpect(content().string(not(containsString("ログイン"))))
+                    .andExpect(content().string(not(containsString("新規登録"))))
+                    .andExpect(content().string(containsString("こんにちは")))
+                    .andExpect(content().string(containsString("Test User")));
+        }
+
+        @Test
         void トップページにプロトタイプ一覧が表示される() throws Exception {
             List<PrototypeEntity> list = List.of(prototypeEntity(1, 10));
             when(prototypeRepository.findAll()).thenReturn(list);
@@ -146,6 +185,61 @@ class PrototypeControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/index"))
                     .andExpect(model().attribute("prototypes", list));
+        }
+
+        @Test
+        void プロトタイプ詳細ページが表示される() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(get("/prototypes/1"))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("prototypes/detail"))
+                    .andExpect(model().attribute("prototype", prototype));
+        }
+
+        @Test
+        void 投稿者のみ編集削除ボタンが表示される() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(get("/prototypes/1").with(authentication(authWithUserId(10))))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("編集する")))
+                    .andExpect(content().string(containsString("削除する")));
+        }
+
+        @Test
+        void 投稿者以外のユーザーには編集削除ボタンが表示されない() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(get("/prototypes/1").with(authentication(authWithUserId(99))))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(not(containsString("編集する"))))
+                    .andExpect(content().string(not(containsString("削除する"))));
+        }
+
+        @Test
+        void 未ログイン状態ではプロトタイプ詳細ページに編集削除ボタンが表示されない() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(get("/prototypes/1"))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("prototypes/detail"))
+                    .andExpect(model().attribute("prototype", prototype))
+                    .andExpect(content().string(not(containsString("編集する"))))
+                    .andExpect(content().string(not(containsString("削除する"))));
+        }
+
+        @Test
+        void 存在しないプロトタイプの詳細はトップへリダイレクトされる() throws Exception {
+            when(prototypeRepository.findById(999)).thenReturn(null);
+
+            mockMvc.perform(get("/prototypes/999"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/prototypes/"));
         }
 
         @Test
@@ -158,7 +252,7 @@ class PrototypeControllerTest {
                             .with(authentication(authWithUserId(1)))
                             .with(csrf()))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/"));
+                    .andExpect(redirectedUrl("/prototypes/"));
 
             verify(prototypeService).createFromForm(any(PrototypeForm.class), any(Integer.class));
         }
@@ -185,7 +279,7 @@ class PrototypeControllerTest {
                             .with(authentication(authWithUserId(42)))
                             .with(csrf()))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/"));
+                    .andExpect(redirectedUrl("/prototypes/"));
 
             ArgumentCaptor<PrototypeForm> formCaptor = ArgumentCaptor.forClass(PrototypeForm.class);
             ArgumentCaptor<Integer> userIdCaptor = ArgumentCaptor.forClass(Integer.class);

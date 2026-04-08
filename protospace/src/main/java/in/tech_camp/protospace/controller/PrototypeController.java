@@ -49,6 +49,34 @@ public class PrototypeController {
         return index(model);
     }
 
+    @GetMapping("/prototypes/{id}")
+    public String show(
+            @PathVariable("id") Integer id,
+            @AuthenticationPrincipal CustomUserDetail userDetail,
+            Model model) {
+
+        PrototypeEntity prototype = prototypeRepository.findById(id);
+        if (prototype == null) {
+            return "redirect:/prototypes/";
+        }
+
+        boolean canManage = false;
+        Integer currentUserId = null;
+        if (userDetail != null && userDetail.getUser() != null) {
+            currentUserId = userDetail.getUser().getId();
+            if (prototype.getUser() != null && prototype.getUser().getId() != null
+                    && currentUserId != null
+                    && prototype.getUser().getId().equals(currentUserId)) {
+                canManage = true;
+            }
+        }
+
+        model.addAttribute("prototype", prototype);
+        model.addAttribute("canManage", canManage);
+        model.addAttribute("commentForm", new Object());
+        return "prototypes/detail";
+    }
+
     @GetMapping("/prototypes/new")
     public String newForm(Model model) {
         model.addAttribute("prototypeForm", new PrototypeForm());
@@ -77,10 +105,10 @@ public class PrototypeController {
             prototypeService.createFromForm(prototypeForm, userId);
         } catch (Exception e) {
             System.out.println("エラー：" + e);
-            return "redirect:/";
+            return "redirect:/prototypes/";
         }
 
-        return "redirect:/";
+        return "redirect:/prototypes/";
     }
 
     @PostMapping("/prototypes/")

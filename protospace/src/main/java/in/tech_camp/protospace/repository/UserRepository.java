@@ -1,7 +1,6 @@
 package in.tech_camp.protospace.repository;
 
 import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Many;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Result;
@@ -25,10 +24,7 @@ public interface UserRepository {
   })
   UserEntity findByEmail(String email);
 
+  /** プロトタイプの user 結合用（nested で prototypes を取らない／再帰関連の不整合を避ける）。 */
   @Select("SELECT id, name, email, profile, occupation, position FROM users WHERE id = #{id}")
-  @Results(value = {
-    @Result(property = "prototypes", column = "id",
-            many = @Many(select = "in.tech_camp.protospace.repository.PrototypeRepository.findByUserId"))
-  })
   UserEntity findById(Integer id);
 }
