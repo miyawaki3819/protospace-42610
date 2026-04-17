@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ja">
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
   <head>
     <meta charset="UTF-8" />
     <title>Protospace</title>
@@ -12,24 +12,23 @@
       <div class="inner">
         <div class="prototype__wrapper">
           <p class="prototype__hedding" th:text="${prototype.title}"></p>
-          <!-- プロトタイプの名称を表示させる -->
           <a th:href="@{/prototypes/{id}(id=${prototype.id})}" class="prototype__user" th:text="'by ' + (${prototype.user != null ? prototype.user.name : ''})"></a>
-          <!-- プロトタイプの投稿者とログインしているユーザーが同じであれば以下を表示する -->
-          <div class="prototype__manage" th:if="${canManage}">
-            <a th:href="@{/prototypes/{id}/edit(id=${prototype.id})}" class="prototype__btn">編集する</a>
+          <div
+            class="prototype__manage"
+            th:if="${prototype.user != null and prototype.user.id != null and #authorization.expression('isAuthenticated()') and prototype.user.id == #authentication.principal.user.id}"
+          >
+            <a th:href="@{/}" class="prototype__btn">編集する</a>
             <form
-              th:action="@{/prototypes/{id}(id=${prototype.id})}"
+              th:action="@{/}"
               method="post"
               class="prototype__btn delete-btn"
             >
-              <input type="hidden" name="_method" value="delete" />
               <input
                 type="submit"
                 class="prototype__btn delete-btn"
                 value="削除する"
               />
             </form>
-            <!-- プロトタイプの投稿者とログインしているユーザーが同じであれば上記を表示する -->
           </div>
           <div class="prototype__image">
             <img

@@ -50,30 +50,14 @@ public class PrototypeController {
     }
 
     @GetMapping("/prototypes/{id}")
-    public String show(
-            @PathVariable("id") Integer id,
-            @AuthenticationPrincipal CustomUserDetail userDetail,
-            Model model) {
+    public String show(@PathVariable("id") Integer id, Model model) {
 
         PrototypeEntity prototype = prototypeRepository.findById(id);
         if (prototype == null) {
             return "redirect:/prototypes/";
         }
 
-        boolean canManage = false;
-        Integer currentUserId = null;
-        if (userDetail != null && userDetail.getUser() != null) {
-            currentUserId = userDetail.getUser().getId();
-            if (prototype.getUser() != null && prototype.getUser().getId() != null
-                    && currentUserId != null
-                    && prototype.getUser().getId().equals(currentUserId)) {
-                canManage = true;
-            }
-        }
-
         model.addAttribute("prototype", prototype);
-        model.addAttribute("canManage", canManage);
-        model.addAttribute("commentForm", new Object());
         return "prototypes/detail";
     }
 
