@@ -32,10 +32,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/login"))
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("/css/**", "/images/**", "/", "/prototypes/", "/prototypes/*/image", "/users/sign_up", "/users/login").permitAll()
+                        .requestMatchers("/css/**", "/images/**", "/users/sign_up", "/users/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/", "/prototypes", "/prototypes/").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/prototypes/*/image").permitAll()
+                        .requestMatchers("/prototypes/new").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/prototypes/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
-                        .requestMatchers("/prototypes/new").authenticated()
                         .requestMatchers(HttpMethod.POST, "/prototypes", "/prototypes/").authenticated()
                         .anyRequest().authenticated())
                 .formLogin(login -> login

@@ -11,11 +11,12 @@
     <main class="main">
       <div class="inner">
         <div class="prototype__wrapper">
-          <p class="prototype__hedding"></p>
-          <!-- プロトタイプの名称を表示させる -->
-          <a th:href="@{/}" class="prototype__user" th:text="'by '"></a>
-          <!-- プロトタイプの投稿者とログインしているユーザーが同じであれば以下を表示する -->
-          <div class="prototype__manage">
+          <p class="prototype__hedding" th:text="${prototype.title}"></p>
+          <a th:href="@{/prototypes/{id}(id=${prototype.id})}" class="prototype__user" th:text="'by ' + (${prototype.user != null ? prototype.user.name : ''})"></a>
+          <div
+            class="prototype__manage"
+            th:if="${prototype.user != null and prototype.user.id != null and #authorization.expression('isAuthenticated()') and prototype.user.id == #authentication.principal.user.id}"
+          >
             <a th:href="@{/}" class="prototype__btn">編集する</a>
             <form
               th:action="@{/}"
@@ -28,19 +29,22 @@
                 value="削除する"
               />
             </form>
-            <!-- プロトタイプの投稿者とログインしているユーザーが同じであれば上記を表示する -->
           </div>
           <div class="prototype__image">
-            <img alt="プロトタイプの画像" />
+            <img
+              th:if="${prototype.imageName != null && !prototype.imageName.isEmpty()}"
+              th:src="@{/prototypes/{id}/image(id=${prototype.id})}"
+              alt="プロトタイプの画像"
+            />
           </div>
           <div class="prototype__body">
             <div class="prototype__detail">
               <p class="detail__title">キャッチコピー</p>
-              <p class="detail__message"></p>
+              <p class="detail__message" th:text="${prototype.catchCopy}"></p>
             </div>
             <div class="prototype__detail">
               <p class="detail__title">コンセプト</p>
-              <p class="detail__message"></p>
+              <p class="detail__message" th:text="${prototype.concept}"></p>
             </div>
           </div>
           <div class="prototype__comments">
