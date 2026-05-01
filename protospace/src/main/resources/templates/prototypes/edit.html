@@ -10,8 +10,8 @@
     <div class="main">
       <div class="inner">
         <div class="form__wrapper">
-          <h2 class="page-heading">新規プロトタイプ編集</h2>
-          <!-- 部分テンプレートでフォームを表示する -->
+          <h2 class="page-heading">プロトタイプ編集</h2>
+          <div th:replace="~{prototypes/form :: form(@{/prototypes/{id}(id=${prototype.id})}, ${prototypeForm}, ${false})}"></div>
         </div>
       </div>
     </div>

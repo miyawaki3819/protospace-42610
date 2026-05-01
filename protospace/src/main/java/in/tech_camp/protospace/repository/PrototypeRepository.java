@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import in.tech_camp.protospace.entity.PrototypeEntity;
 
@@ -32,6 +33,9 @@ public interface PrototypeRepository {
   @Insert("INSERT INTO prototypes (title, catch_copy, concept, image_name, image_type, image_data, user_id) VALUES (#{title}, #{catchCopy}, #{concept}, #{imageName}, #{imageType}, #{imageData}, #{user.id})")
   @Options(useGeneratedKeys = true, keyProperty = "id")
   void insert(PrototypeEntity prototype);
+
+  @Update("UPDATE prototypes SET title = #{title}, catch_copy = #{catchCopy}, concept = #{concept}, image_name = #{imageName}, image_type = #{imageType}, image_data = #{imageData} WHERE id = #{id}")
+  void update(PrototypeEntity prototype);
 
   @Select("SELECT * FROM prototypes WHERE user_id = #{userId}")
   List<PrototypeEntity> findByUserId(Integer userId);

@@ -34,12 +34,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/css/**", "/images/**", "/users/sign_up", "/users/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/", "/prototypes", "/prototypes/").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/prototypes/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/prototypes/*/image").permitAll()
                         .requestMatchers("/prototypes/new").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/prototypes/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/prototypes/*/edit").authenticated()
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/prototypes", "/prototypes/").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/prototypes", "/prototypes/", "/prototypes/*").authenticated()
                         .anyRequest().authenticated())
                 .formLogin(login -> login
                         .loginProcessingUrl("/login")
