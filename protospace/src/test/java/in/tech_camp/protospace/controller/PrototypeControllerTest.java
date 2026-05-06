@@ -118,7 +118,7 @@ class PrototypeControllerTest {
         void 未ログインでトップページが表示される() throws Exception {
             when(prototypeRepository.findAll()).thenReturn(Collections.emptyList());
 
-            mockMvc.perform(get("/prototypes/"))
+            mockMvc.perform(get("/prototypes"))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/index"))
                     .andExpect(model().attributeExists("prototypes"));
@@ -128,7 +128,7 @@ class PrototypeControllerTest {
         void 未ログイン状態ではトップページにログインボタンが表示される() throws Exception {
             when(prototypeRepository.findAll()).thenReturn(Collections.emptyList());
 
-            mockMvc.perform(get("/prototypes/"))
+            mockMvc.perform(get("/prototypes"))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/index"))
                     .andExpect(model().attributeExists("prototypes"))
@@ -149,7 +149,7 @@ class PrototypeControllerTest {
             Authentication auth = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
 
-            mockMvc.perform(get("/prototypes/").with(authentication(auth)))
+            mockMvc.perform(get("/prototypes").with(authentication(auth)))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/index"))
                     .andExpect(model().attributeExists("prototypes"));
@@ -165,7 +165,7 @@ class PrototypeControllerTest {
             Authentication auth = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
 
-            mockMvc.perform(get("/prototypes/").with(authentication(auth)))
+            mockMvc.perform(get("/prototypes").with(authentication(auth)))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/index"))
                     .andExpect(model().attributeExists("prototypes"))
@@ -182,7 +182,7 @@ class PrototypeControllerTest {
             List<PrototypeEntity> list = List.of(prototypeEntity(1, 10));
             when(prototypeRepository.findAll()).thenReturn(list);
 
-            mockMvc.perform(get("/prototypes/"))
+            mockMvc.perform(get("/prototypes"))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/index"))
                     .andExpect(model().attribute("prototypes", list));
@@ -240,7 +240,7 @@ class PrototypeControllerTest {
 
             mockMvc.perform(get("/prototypes/999"))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/prototypes/"));
+                    .andExpect(redirectedUrl("/prototypes"));
         }
 
         @Test
@@ -253,7 +253,7 @@ class PrototypeControllerTest {
                             .with(authentication(authWithUserId(1)))
                             .with(csrf()))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/prototypes/"));
+                    .andExpect(redirectedUrl("/prototypes"));
 
             verify(prototypeService).createFromForm(any(PrototypeForm.class), any(Integer.class));
         }
@@ -280,7 +280,7 @@ class PrototypeControllerTest {
                             .with(authentication(authWithUserId(42)))
                             .with(csrf()))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/prototypes/"));
+                    .andExpect(redirectedUrl("/prototypes"));
 
             ArgumentCaptor<PrototypeForm> formCaptor = ArgumentCaptor.forClass(PrototypeForm.class);
             ArgumentCaptor<Integer> userIdCaptor = ArgumentCaptor.forClass(Integer.class);
@@ -360,7 +360,7 @@ class PrototypeControllerTest {
 
             mockMvc.perform(get("/prototypes/1/edit").with(authentication(authWithUserId(99))))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/prototypes/"));
+                    .andExpect(redirectedUrl("/prototypes"));
         }
 
         @Test
