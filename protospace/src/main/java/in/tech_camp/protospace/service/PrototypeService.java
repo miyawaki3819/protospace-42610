@@ -22,6 +22,20 @@ public class PrototypeService {
         return entity.getId();
     }
 
+    public void updateFromForm(PrototypeEntity existingEntity, PrototypeForm form) throws IOException {
+        existingEntity.setTitle(form.getTitle());
+        existingEntity.setCatchCopy(form.getCatchCopy());
+        existingEntity.setConcept(form.getConcept());
+
+        if (form.getImageFile() != null && !form.getImageFile().isEmpty()) {
+            existingEntity.setImageName(form.getImageFile().getOriginalFilename());
+            existingEntity.setImageType(form.getImageFile().getContentType());
+            existingEntity.setImageData(form.getImageFile().getBytes());
+        }
+
+        prototypeRepository.update(existingEntity);
+    }
+
     private PrototypeEntity convertFormToEntity(PrototypeForm form, Integer userId) throws IOException {
         PrototypeEntity entity = new PrototypeEntity();
         entity.setTitle(form.getTitle());

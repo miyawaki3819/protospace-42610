@@ -2,9 +2,9 @@ package in.tech_camp.protospace.form;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import in.tech_camp.protospace.validation.PrototypeCreateValidation;
+import in.tech_camp.protospace.validation.PrototypeUpdateValidation;
 import in.tech_camp.protospace.validation.ValidImage;
-import in.tech_camp.protospace.validation.ValidationPriority1;
-import in.tech_camp.protospace.validation.ValidationPriority2;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -12,16 +12,20 @@ import lombok.Data;
 @Data
 public class PrototypeForm {
 
-    @NotBlank(message = "プロトタイプの名称を入力してください", groups = { ValidationPriority1.class })
+    @NotBlank(message = "プロトタイプの名称を入力してください", groups = { PrototypeCreateValidation.Group1.class,
+            PrototypeUpdateValidation.Group1.class })
     private String title;
 
-    @NotBlank(message = "キャッチコピーを入力してください", groups = { ValidationPriority1.class })
+    @NotBlank(message = "キャッチコピーを入力してください", groups = { PrototypeCreateValidation.Group1.class,
+            PrototypeUpdateValidation.Group1.class })
     private String catchCopy;
 
-    @NotBlank(message = "コンセプトを入力してください", groups = { ValidationPriority1.class })
+    @NotBlank(message = "コンセプトを入力してください", groups = { PrototypeCreateValidation.Group1.class,
+            PrototypeUpdateValidation.Group1.class })
     private String concept;
 
-    @NotNull(message = "ImageFile can't be blank", groups = {ValidationPriority1.class})
-    @ValidImage(message = "Invalid image file", groups = {ValidationPriority1.class, ValidationPriority2.class})
+    @NotNull(message = "プロトタイプの画像を選択してください", groups = { PrototypeCreateValidation.Group1.class })
+    @ValidImage(message = "画像ファイルが無効です", groups = { PrototypeCreateValidation.Group2.class,
+            PrototypeUpdateValidation.Group2.class })
     private MultipartFile imageFile;
 }

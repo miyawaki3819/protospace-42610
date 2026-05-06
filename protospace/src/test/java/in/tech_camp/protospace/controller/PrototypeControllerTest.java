@@ -29,6 +29,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -117,7 +118,7 @@ class PrototypeControllerTest {
         void 未ログインでトップページが表示される() throws Exception {
             when(prototypeRepository.findAll()).thenReturn(Collections.emptyList());
 
-            mockMvc.perform(get("/prototypes/"))
+            mockMvc.perform(get("/prototypes"))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/index"))
                     .andExpect(model().attributeExists("prototypes"));
@@ -127,7 +128,7 @@ class PrototypeControllerTest {
         void 未ログイン状態ではトップページにログインボタンが表示される() throws Exception {
             when(prototypeRepository.findAll()).thenReturn(Collections.emptyList());
 
-            mockMvc.perform(get("/prototypes/"))
+            mockMvc.perform(get("/prototypes"))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/index"))
                     .andExpect(model().attributeExists("prototypes"))
@@ -148,7 +149,7 @@ class PrototypeControllerTest {
             Authentication auth = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
 
-            mockMvc.perform(get("/prototypes/").with(authentication(auth)))
+            mockMvc.perform(get("/prototypes").with(authentication(auth)))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/index"))
                     .andExpect(model().attributeExists("prototypes"));
@@ -164,7 +165,7 @@ class PrototypeControllerTest {
             Authentication auth = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
 
-            mockMvc.perform(get("/prototypes/").with(authentication(auth)))
+            mockMvc.perform(get("/prototypes").with(authentication(auth)))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/index"))
                     .andExpect(model().attributeExists("prototypes"))
@@ -181,7 +182,7 @@ class PrototypeControllerTest {
             List<PrototypeEntity> list = List.of(prototypeEntity(1, 10));
             when(prototypeRepository.findAll()).thenReturn(list);
 
-            mockMvc.perform(get("/prototypes/"))
+            mockMvc.perform(get("/prototypes"))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/index"))
                     .andExpect(model().attribute("prototypes", list));
@@ -239,7 +240,7 @@ class PrototypeControllerTest {
 
             mockMvc.perform(get("/prototypes/999"))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/prototypes/"));
+                    .andExpect(redirectedUrl("/prototypes"));
         }
 
         @Test
@@ -252,7 +253,7 @@ class PrototypeControllerTest {
                             .with(authentication(authWithUserId(1)))
                             .with(csrf()))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/prototypes/"));
+                    .andExpect(redirectedUrl("/prototypes"));
 
             verify(prototypeService).createFromForm(any(PrototypeForm.class), any(Integer.class));
         }
@@ -279,7 +280,7 @@ class PrototypeControllerTest {
                             .with(authentication(authWithUserId(42)))
                             .with(csrf()))
                     .andExpect(status().is3xxRedirection())
-                    .andExpect(redirectedUrl("/prototypes/"));
+                    .andExpect(redirectedUrl("/prototypes"));
 
             ArgumentCaptor<PrototypeForm> formCaptor = ArgumentCaptor.forClass(PrototypeForm.class);
             ArgumentCaptor<Integer> userIdCaptor = ArgumentCaptor.forClass(Integer.class);
@@ -292,6 +293,35 @@ class PrototypeControllerTest {
             assertThat(capturedForm.getImageFile().getOriginalFilename(), is("my-image.jpg"));
             assertThat(capturedForm.getImageFile().getContentType(), is("image/jpeg"));
             assertArrayEquals("image bytes".getBytes(), capturedForm.getImageFile().getBytes());
+        }
+
+        @Test
+        void 投稿者は編集ページへ遷移できる() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(get("/prototypes/1/edit").with(authentication(authWithUserId(10))))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("prototypes/edit"))
+                    .andExpect(model().attributeExists("prototypeForm"))
+                    .andExpect(content().string(containsString("保存する")));
+        }
+
+        @Test
+        void update_有効な入力で編集すると詳細ページへリダイレクトされる() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(post("/prototypes/1")
+                            .param("title", "更新後タイトル")
+                            .param("catchCopy", "更新後キャッチ")
+                            .param("concept", "更新後コンセプト")
+                            .with(authentication(authWithUserId(10)))
+                            .with(csrf()))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/prototypes/1"));
+
+            verify(prototypeService).updateFromForm(any(PrototypeEntity.class), any(PrototypeForm.class));
         }
 
         @Test
@@ -312,8 +342,43 @@ class PrototypeControllerTest {
         @Test
         void 未認証では新規作成フォームへアクセスするとログインへリダイレクトされる() throws Exception {
             mockMvc.perform(get("/prototypes/new"))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("prototypes/new"));
+        }
+
+        @Test
+        void 未認証では編集ページへアクセスするとログインへリダイレクトされる() throws Exception {
+            mockMvc.perform(get("/prototypes/1/edit"))
                     .andExpect(status().is3xxRedirection())
                     .andExpect(redirectedUrlPattern("**/users/login"));
+        }
+
+        @Test
+        void 投稿者以外は編集ページへアクセスするとトップへリダイレクトされる() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(get("/prototypes/1/edit").with(authentication(authWithUserId(99))))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/prototypes"));
+        }
+
+        @Test
+        void update_バリデーションエラー時は編集ページに戻る() throws Exception {
+            mockMvc.perform(post("/prototypes/1")
+                            .param("title", "")
+                            .param("catchCopy", "キャッチ")
+                            .param("concept", "コンセプト")
+                            .with(authentication(authWithUserId(10)))
+                            .with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("prototypes/edit"))
+                    .andExpect(model().attributeHasFieldErrors("prototypeForm", "title"))
+                    .andExpect(model().attributeExists("errorMessages"))
+                    .andExpect(model().attribute("prototypeId", 1))
+                    .andExpect(model().attributeExists("prototype"));
+
+            verify(prototypeService, never()).updateFromForm(any(PrototypeEntity.class), any(PrototypeForm.class));
         }
 
         @Test

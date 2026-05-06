@@ -1,4 +1,9 @@
-<div xmlns:th="http://www.thymeleaf.org" th:fragment="form(actionUrl, prototypeForm)">
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="form(actionUrl, prototypeForm, requireImage)">
+  <div th:if="${errorMessages != null && !errorMessages.isEmpty()}" class="error-messages">
+    <ul>
+      <li th:each="message : ${errorMessages}" th:text="${message}"></li>
+    </ul>
+  </div>
   <form th:action="${actionUrl}" th:object="${prototypeForm}" enctype="multipart/form-data" th:method="post">
     <div class="field">
       <label for="prototype_title">プロトタイプの名称</label><br />
@@ -22,7 +27,7 @@
     <!-- 画像投稿機能 -->
     <div class="field">
       <label for="prototype_image">プロトタイプの画像</label><br />
-      <input type="file" th:field="*{imageFile}" id="prototype_image" accept="image/*" th:required="true" />
+      <input type="file" th:field="*{imageFile}" id="prototype_image" accept="image/*" th:required="${requireImage}" />
     </div>
 
     <div class="actions">

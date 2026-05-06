@@ -10,7 +10,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +22,8 @@ import in.tech_camp.protospace.custom_user.CustomUserDetail;
 import in.tech_camp.protospace.form.PrototypeForm;
 import in.tech_camp.protospace.entity.PrototypeEntity;
 import in.tech_camp.protospace.repository.PrototypeRepository;
-import in.tech_camp.protospace.validation.ValidationPriority1;
+import in.tech_camp.protospace.validation.PrototypeCreateValidation;
+import in.tech_camp.protospace.validation.PrototypeUpdateValidation;
 import in.tech_camp.protospace.service.PrototypeService;
 
 @Controller
@@ -44,17 +44,12 @@ public class PrototypeController {
         return "prototypes/index";
     }
 
-    @GetMapping("/prototypes/")
-    public String indexWithSlash(Model model) {
-        return index(model);
-    }
-
     @GetMapping("/prototypes/{id}")
     public String show(@PathVariable("id") Integer id, Model model) {
 
         PrototypeEntity prototype = prototypeRepository.findById(id);
         if (prototype == null) {
-            return "redirect:/prototypes/";
+            return "redirect:/prototypes";
         }
 
         model.addAttribute("prototype", prototype);
@@ -69,7 +64,7 @@ public class PrototypeController {
 
     @PostMapping("/prototypes")
     public String create(
-            @ModelAttribute("prototypeForm") @Validated(ValidationPriority1.class) PrototypeForm prototypeForm,
+            @ModelAttribute("prototypeForm") @Validated(PrototypeCreateValidation.Order.class) PrototypeForm prototypeForm,
             BindingResult result,
             @AuthenticationPrincipal CustomUserDetail userDetail,
             Model model) throws IOException {
@@ -89,19 +84,70 @@ public class PrototypeController {
             prototypeService.createFromForm(prototypeForm, userId);
         } catch (Exception e) {
             System.out.println("エラー：" + e);
-            return "redirect:/prototypes/";
+            return "redirect:/prototypes";
         }
 
-        return "redirect:/prototypes/";
+        return "redirect:/prototypes";
     }
 
-    @PostMapping("/prototypes/")
-    public String createWithSlash(
-            @ModelAttribute("prototypeForm") @Validated(ValidationPriority1.class) PrototypeForm prototypeForm,
+    @GetMapping("/prototypes/{id}/edit")
+    public String editForm(@PathVariable("id") Integer id, @AuthenticationPrincipal CustomUserDetail userDetail, Model model) {
+        PrototypeEntity prototype = prototypeRepository.findById(id);
+        if (prototype == null) {
+            return "redirect:/prototypes";
+        }
+        if (prototype.getUser() == null || userDetail == null || userDetail.getUser() == null
+                || !prototype.getUser().getId().equals(userDetail.getUser().getId())) {
+            return "redirect:/prototypes";
+        }
+
+        PrototypeForm prototypeForm = new PrototypeForm();
+        prototypeForm.setTitle(prototype.getTitle());
+        prototypeForm.setCatchCopy(prototype.getCatchCopy());
+        prototypeForm.setConcept(prototype.getConcept());
+        model.addAttribute("prototypeForm", prototypeForm);
+        model.addAttribute("prototype", prototype);
+        return "prototypes/edit";
+    }
+
+    @PostMapping("/prototypes/{id}")
+    public String update(
+            @PathVariable("id") Integer id,
+            @ModelAttribute("prototypeForm") @Validated(PrototypeUpdateValidation.Order.class) PrototypeForm prototypeForm,
             BindingResult result,
             @AuthenticationPrincipal CustomUserDetail userDetail,
             Model model) throws IOException {
-        return create(prototypeForm, result, userDetail, model);
+        if (result.hasErrors()) {
+            List<String> errorMessages = result.getAllErrors().stream()
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                    .collect(Collectors.toList());
+            model.addAttribute("errorMessages", errorMessages);
+            prototypeForm.setImageFile(null);
+            model.addAttribute("prototypeForm", prototypeForm);
+            model.addAttribute("prototypeId", id);
+            PrototypeEntity prototypeForView = new PrototypeEntity();
+            prototypeForView.setId(id);
+            model.addAttribute("prototype", prototypeForView);
+            return "prototypes/edit";
+        }
+
+        PrototypeEntity prototype = prototypeRepository.findById(id);
+        if (prototype == null) {
+            return "redirect:/prototypes";
+        }
+        if (prototype.getUser() == null || userDetail == null || userDetail.getUser() == null
+                || !prototype.getUser().getId().equals(userDetail.getUser().getId())) {
+            return "redirect:/prototypes";
+        }
+
+        try {
+            prototypeService.updateFromForm(prototype, prototypeForm);
+        } catch (Exception e) {
+            System.out.println("エラー：" + e);
+            return "redirect:/prototypes";
+        }
+
+        return "redirect:/prototypes/" + id;
     }
 
     @GetMapping(value = "/prototypes/{id}/image", produces = MediaType.ALL_VALUE)

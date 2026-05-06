@@ -69,7 +69,7 @@ class UserControllerTest {
             when(userRepository.existsByEmail(userForm.getEmail())).thenReturn(false);
 
             String result = userController.createUser(userForm, bindingResult, model);
-            assertThat(result, is("redirect:/prototypes/"));
+            assertThat(result, is("redirect:/prototypes"));
 
             verify(userRepository, times(1)).existsByEmail(userForm.getEmail());
             verify(userService, times(1)).createUser(any(UserForm.class));
@@ -89,7 +89,7 @@ class UserControllerTest {
             ArgumentCaptor<UserForm> formCaptor = ArgumentCaptor.forClass(UserForm.class);
             String result = userController.createUser(userForm, bindingResult, model);
 
-            assertThat(result, is("redirect:/prototypes/"));
+            assertThat(result, is("redirect:/prototypes"));
             verify(userService, times(1)).createUser(formCaptor.capture());
             UserForm captured = formCaptor.getValue();
             assertThat(captured.getProfile(), is("エンジニアです。よろしくお願いします。"));
