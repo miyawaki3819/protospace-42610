@@ -325,6 +325,20 @@ class PrototypeControllerTest {
         }
 
         @Test
+        void delete_投稿者が削除すると一覧へリダイレクトされレコードが削除される() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(post("/prototypes/1/delete")
+                            .with(authentication(authWithUserId(10)))
+                            .with(csrf()))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/prototypes"));
+
+            verify(prototypeRepository).deleteById(1);
+        }
+
+        @Test
         void 画像取得で存在するidを指定すると200と画像データが返る() throws Exception {
             PrototypeEntity entity = prototypeEntity(1, 10);
             when(prototypeRepository.findById(1)).thenReturn(entity);
@@ -361,6 +375,19 @@ class PrototypeControllerTest {
             mockMvc.perform(get("/prototypes/1/edit").with(authentication(authWithUserId(99))))
                     .andExpect(status().is3xxRedirection())
                     .andExpect(redirectedUrl("/prototypes"));
+        }
+
+        @Test
+        void delete_存在しないプロトタイプは一覧へリダイレクトされる() throws Exception {
+            when(prototypeRepository.findById(999)).thenReturn(null);
+
+            mockMvc.perform(post("/prototypes/999/delete")
+                            .with(authentication(authWithUserId(10)))
+                            .with(csrf()))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/prototypes"));
+
+            verify(prototypeRepository, never()).deleteById(any());
         }
 
         @Test

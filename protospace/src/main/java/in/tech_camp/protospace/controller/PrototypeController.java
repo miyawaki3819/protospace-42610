@@ -150,6 +150,27 @@ public class PrototypeController {
         return "redirect:/prototypes/" + id;
     }
 
+    @PostMapping("/prototypes/{id}/delete")
+    public String delete(
+            @PathVariable("id") Integer id,
+            @AuthenticationPrincipal CustomUserDetail userDetail) {
+        PrototypeEntity prototype = prototypeRepository.findById(id);
+        if (prototype == null) {
+            return "redirect:/prototypes";
+        }
+        if (prototype.getUser() == null || userDetail == null || userDetail.getUser() == null
+                || !prototype.getUser().getId().equals(userDetail.getUser().getId())) {
+            return "redirect:/prototypes";
+        }
+        try {
+            prototypeRepository.deleteById(id);
+        } catch (Exception e) {
+            System.out.println("エラー：" + e);
+            return "redirect:/prototypes";
+        }
+        return "redirect:/prototypes";
+    }
+
     @GetMapping(value = "/prototypes/{id}/image", produces = MediaType.ALL_VALUE)
     public ResponseEntity<byte[]> getImage(@PathVariable("id") Integer id){
         try {

@@ -19,7 +19,7 @@
           >
             <a th:href="@{/prototypes/{id}/edit(id=${prototype.id})}" class="prototype__btn">編集する</a>
             <form
-              th:action="@{/}"
+              th:action="@{/prototypes/{id}/delete(id=${prototype.id})}"
               method="post"
               class="prototype__btn delete-btn"
             >
