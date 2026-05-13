@@ -64,6 +64,9 @@ class PrototypeControllerTest {
     protected in.tech_camp.protospace.repository.PrototypeRepository prototypeRepository;
 
     @MockBean
+    protected in.tech_camp.protospace.repository.CommentRepository commentRepository;
+
+    @MockBean
     protected in.tech_camp.protospace.repository.UserRepository userRepository;
 
     protected PrototypeForm form;
@@ -77,6 +80,7 @@ class PrototypeControllerTest {
                 "test.jpg",
                 "image/jpeg",
                 "dummy".getBytes());
+        when(commentRepository.findByPrototypeId(any())).thenReturn(Collections.emptyList());
     }
 
     protected Authentication authWithUserId(int userId) {
@@ -196,7 +200,9 @@ class PrototypeControllerTest {
             mockMvc.perform(get("/prototypes/1"))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/detail"))
-                    .andExpect(model().attribute("prototype", prototype));
+                    .andExpect(model().attribute("prototype", prototype))
+                    .andExpect(model().attributeExists("comments"))
+                    .andExpect(model().attributeExists("commentForm"));
         }
 
         @Test
@@ -230,6 +236,8 @@ class PrototypeControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/detail"))
                     .andExpect(model().attribute("prototype", prototype))
+                    .andExpect(model().attributeExists("comments"))
+                    .andExpect(model().attributeExists("commentForm"))
                     .andExpect(content().string(not(containsString("編集する"))))
                     .andExpect(content().string(not(containsString("削除する"))));
         }
@@ -348,6 +356,7 @@ class PrototypeControllerTest {
                     .andExpect(header().string("Content-Type", "image/jpeg"))
                     .andExpect(content().bytes("image data".getBytes()));
         }
+
     }
 
     @Nested

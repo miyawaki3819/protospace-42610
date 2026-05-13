@@ -19,8 +19,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import in.tech_camp.protospace.custom_user.CustomUserDetail;
+import in.tech_camp.protospace.form.CommentForm;
 import in.tech_camp.protospace.form.PrototypeForm;
 import in.tech_camp.protospace.entity.PrototypeEntity;
+import in.tech_camp.protospace.repository.CommentRepository;
 import in.tech_camp.protospace.repository.PrototypeRepository;
 import in.tech_camp.protospace.validation.PrototypeCreateValidation;
 import in.tech_camp.protospace.validation.PrototypeUpdateValidation;
@@ -31,10 +33,13 @@ public class PrototypeController {
 
     private final PrototypeService prototypeService;
     private final PrototypeRepository prototypeRepository;
+    private final CommentRepository commentRepository;
 
-    public PrototypeController(PrototypeService prototypeService, PrototypeRepository prototypeRepository) {
+    public PrototypeController(PrototypeService prototypeService, PrototypeRepository prototypeRepository,
+            CommentRepository commentRepository) {
         this.prototypeService = prototypeService;
         this.prototypeRepository = prototypeRepository;
+        this.commentRepository = commentRepository;
     }
 
     @GetMapping("/prototypes")
@@ -53,6 +58,8 @@ public class PrototypeController {
         }
 
         model.addAttribute("prototype", prototype);
+        model.addAttribute("comments", commentRepository.findByPrototypeId(id));
+        model.addAttribute("commentForm", new CommentForm());
         return "prototypes/detail";
     }
 
