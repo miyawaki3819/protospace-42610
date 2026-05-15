@@ -1,5 +1,6 @@
 package in.tech_camp.protospace.controller;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import in.tech_camp.protospace.custom_user.CustomUserDetail;
 import in.tech_camp.protospace.entity.CommentEntity;
 import in.tech_camp.protospace.entity.PrototypeEntity;
-import in.tech_camp.protospace.entity.UserEntity;
 import in.tech_camp.protospace.form.CommentForm;
 import in.tech_camp.protospace.repository.CommentRepository;
 import in.tech_camp.protospace.repository.PrototypeRepository;
@@ -40,9 +40,12 @@ public class CommentController {
             return "redirect:/prototypes";
         }
 
-        List<CommentEntity> comments = commentRepository.findByPrototypeId(id);
         if (result.hasErrors()) {
             model.addAttribute("prototype", prototype);
+            model.addAttribute("commentSubmitFailed", true);
+            List<CommentEntity> comments = prototype.getComments() != null
+                    ? prototype.getComments()
+                    : Collections.emptyList();
             model.addAttribute("comments", comments);
             return "prototypes/detail";
         }
@@ -50,10 +53,20 @@ public class CommentController {
         CommentEntity comment = new CommentEntity();
         comment.setText(commentForm.getText().trim());
         comment.setPrototypeId(id);
-        UserEntity user = new UserEntity();
-        user.setId(userDetail.getUser().getId());
-        comment.setUser(user);
-        commentRepository.insert(comment);
+        comment.setUser(userDetail.getUser());
+        try {
+            commentRepository.insert(comment);
+        } catch (Exception e) {
+            System.out.println("コメント保存エラー：" + e);
+            model.addAttribute("prototype", prototype);
+            model.addAttribute("commentSubmitFailed", true);
+            model.addAttribute("commentErrorMessage", "コメントの保存に失敗しました。もう一度お試しください。");
+            List<CommentEntity> comments = prototype.getComments() != null
+                    ? prototype.getComments()
+                    : Collections.emptyList();
+            model.addAttribute("comments", comments);
+            return "prototypes/detail";
+        }
 
         return "redirect:/prototypes/" + id;
     }

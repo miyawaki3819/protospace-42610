@@ -19,7 +19,10 @@ public interface CommentRepository {
     @Results(value = {
             @Result(property = "text", column = "content"),
             @Result(property = "user", column = "user_id",
-                    one = @One(select = "in.tech_camp.protospace.repository.UserRepository.findById"))
+                    one = @One(select = "in.tech_camp.protospace.repository.UserRepository.findById")),
+            @Result(property = "prototype", column = "prototype_id",
+                    one = @One(select = "in.tech_camp.protospace.repository.PrototypeRepository.findByIdWithoutComments")),
+            @Result(property = "prototypeId", column = "prototype_id")
     })
     List<CommentEntity> findByPrototypeId(Integer prototypeId);
 

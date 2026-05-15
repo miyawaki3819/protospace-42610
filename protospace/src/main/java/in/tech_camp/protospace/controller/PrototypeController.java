@@ -1,6 +1,7 @@
 package in.tech_camp.protospace.controller;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,8 +22,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import in.tech_camp.protospace.custom_user.CustomUserDetail;
 import in.tech_camp.protospace.form.CommentForm;
 import in.tech_camp.protospace.form.PrototypeForm;
+import in.tech_camp.protospace.entity.CommentEntity;
 import in.tech_camp.protospace.entity.PrototypeEntity;
-import in.tech_camp.protospace.repository.CommentRepository;
 import in.tech_camp.protospace.repository.PrototypeRepository;
 import in.tech_camp.protospace.validation.PrototypeCreateValidation;
 import in.tech_camp.protospace.validation.PrototypeUpdateValidation;
@@ -33,13 +34,15 @@ public class PrototypeController {
 
     private final PrototypeService prototypeService;
     private final PrototypeRepository prototypeRepository;
-    private final CommentRepository commentRepository;
 
-    public PrototypeController(PrototypeService prototypeService, PrototypeRepository prototypeRepository,
-            CommentRepository commentRepository) {
+    public PrototypeController(PrototypeService prototypeService, PrototypeRepository prototypeRepository) {
         this.prototypeService = prototypeService;
         this.prototypeRepository = prototypeRepository;
-        this.commentRepository = commentRepository;
+    }
+
+    @GetMapping("/")
+    public String home() {
+        return "index";
     }
 
     @GetMapping("/prototypes")
@@ -50,7 +53,7 @@ public class PrototypeController {
     }
 
     @GetMapping("/prototypes/{id}")
-    public String show(@PathVariable("id") Integer id, Model model) {
+    public String show(@PathVariable("id") Integer id, Model model, @AuthenticationPrincipal CustomUserDetail userDetail) {
 
         PrototypeEntity prototype = prototypeRepository.findById(id);
         if (prototype == null) {
@@ -58,8 +61,13 @@ public class PrototypeController {
         }
 
         model.addAttribute("prototype", prototype);
-        model.addAttribute("comments", commentRepository.findByPrototypeId(id));
-        model.addAttribute("commentForm", new CommentForm());
+        List<CommentEntity> comments = prototype.getComments() != null
+                ? prototype.getComments()
+                : Collections.emptyList();
+        model.addAttribute("comments", comments);
+        if (userDetail != null) {
+            model.addAttribute("commentForm", new CommentForm());
+        }
         return "prototypes/detail";
     }
 

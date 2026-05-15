@@ -1,14 +1,13 @@
 package in.tech_camp.protospace.controller;
 
-import java.util.Collections;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import org.junit.jupiter.api.BeforeEach;
+import static org.hamcrest.Matchers.containsString;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -23,6 +22,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
@@ -55,11 +55,6 @@ class CommentControllerTest {
 
     @MockBean
     protected in.tech_camp.protospace.repository.UserRepository userRepository;
-
-    @BeforeEach
-    void setUp() {
-        when(commentRepository.findByPrototypeId(any())).thenReturn(Collections.emptyList());
-    }
 
     private Authentication authWithUserId(int userId) {
         UserEntity userEntity = new UserEntity();
@@ -99,6 +94,28 @@ class CommentControllerTest {
             assertThat(captor.getValue().getPrototypeId(), is(1));
             assertThat(captor.getValue().getUser().getId(), is(5));
         }
+
+        @Test
+        void ログイン済みでコメント投稿するとパス上のprototype_idと認証ユーザーのuser_idがinsertに渡される() throws Exception {
+            int prototypeId = 42;
+            int authenticatedUserId = 7;
+            PrototypeEntity prototype = prototypeEntity(prototypeId, 99);
+            when(prototypeRepository.findById(prototypeId)).thenReturn(prototype);
+
+            mockMvc.perform(post("/prototypes/{id}/comments", prototypeId)
+                            .param("text", "保存確認用")
+                            .with(authentication(authWithUserId(authenticatedUserId)))
+                            .with(csrf()))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/prototypes/" + prototypeId));
+
+            ArgumentCaptor<CommentEntity> captor = ArgumentCaptor.forClass(CommentEntity.class);
+            verify(commentRepository).insert(captor.capture());
+            CommentEntity saved = captor.getValue();
+            assertThat(saved.getPrototypeId(), is(prototypeId));
+            assertThat(saved.getUser().getId(), is(authenticatedUserId));
+            assertThat(saved.getText(), is("保存確認用"));
+        }
     }
 
     @Nested
@@ -114,9 +131,51 @@ class CommentControllerTest {
                             .with(csrf()))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/detail"))
-                    .andExpect(model().attributeHasFieldErrors("commentForm", "text"));
+                    .andExpect(model().attributeHasFieldErrors("commentForm", "text"))
+                    .andExpect(model().attribute("commentSubmitFailed", true))
+                    .andExpect(model().attributeExists("commentForm"))
+                    .andExpect(model().attributeExists("comments"))
+                    .andExpect(content().string(containsString("id=\"comment_text\"")))
+                    .andExpect(content().string(containsString("送信する")));
 
             verify(commentRepository, never()).insert(any(CommentEntity.class));
+        }
+
+        @Test
+        void コメントバリデーションエラー時はコメント投稿フォームが再表示される() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(post("/prototypes/1/comments")
+                            .param("text", "   ")
+                            .with(authentication(authWithUserId(5)))
+                            .with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("prototypes/detail"))
+                    .andExpect(model().attributeExists("commentForm"))
+                    .andExpect(content().string(containsString("id=\"comment_text\"")))
+                    .andExpect(content().string(containsString("コメント")))
+                    .andExpect(content().string(containsString("/prototypes/1/comments")))
+                    .andExpect(content().string(containsString("送信する")));
+        }
+
+        @Test
+        void コメント保存で例外が発生した場合は詳細ページに戻りエラーメッセージが付与される() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+            doThrow(new RuntimeException("DB error")).when(commentRepository).insert(any(CommentEntity.class));
+
+            mockMvc.perform(post("/prototypes/1/comments")
+                            .param("text", "テスト本文")
+                            .with(authentication(authWithUserId(5)))
+                            .with(csrf()))
+                    .andExpect(status().isOk())
+                    .andExpect(view().name("prototypes/detail"))
+                    .andExpect(model().attribute("commentSubmitFailed", true))
+                    .andExpect(model().attributeExists("commentErrorMessage"))
+                    .andExpect(model().attributeExists("comments"));
+
+            verify(commentRepository).insert(any(CommentEntity.class));
         }
 
         @Test

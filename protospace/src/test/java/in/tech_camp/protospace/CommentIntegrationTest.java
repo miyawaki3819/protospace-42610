@@ -1,6 +1,7 @@
 package in.tech_camp.protospace;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -11,17 +12,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import in.tech_camp.protospace.entity.CommentEntity;
@@ -74,34 +76,59 @@ public class CommentIntegrationTest {
 
   @BeforeEach
   public void setup() throws Exception {
-    userForm = UserFormFactory.build();
+    userForm = UserFormFactory.build(f -> f.setName("CommentIntegrationUser"));
     userService.createUser(userForm);
     userEntity = userRepository.findByEmail(userForm.getEmail());
 
-    prototypeForm = PrototypeFormFactory.build();
-    Integer prototypeId = prototypeService.createFromForm(prototypeForm, userEntity.getId());
-    prototypeEntity = prototypeRepository.findById(prototypeId);
+    prototypeEntity = new PrototypeEntity();
+    prototypeEntity.setTitle("CommentIntegrationPrototypeTitle");
+    prototypeEntity.setCatchCopy("CommentIntegrationCatchCopy");
+    prototypeEntity.setConcept("CommentIntegrationConcept");
+    prototypeEntity.setImageName("test.jpg");
+    prototypeEntity.setImageType("image/jpeg");
+    prototypeEntity.setImageData("dummy".getBytes());
+    UserEntity user = new UserEntity();
+    user.setId(userEntity.getId());
+    prototypeEntity.setUser(user);
+    prototypeRepository.insert(prototypeEntity);
 
     commentForm = CommentFormFactory.createComment();
+    commentForm.setText("CommentIntegrationCommentBody");
+  }
+
+  @Test
+  public void 未ログインではプロトタイプ詳細にコメント投稿フォームが表示されない() throws Exception {
+    MvcResult result = mockMvc.perform(get("/prototypes/{id}", prototypeEntity.getId()))
+        .andExpect(status().isOk())
+        .andExpect(content().string(containsString(prototypeEntity.getTitle())))
+        .andReturn();
+    String content = result.getResponse().getContentAsString();
+    System.out.println("Content: " + content);
+    assert !content.contains("送信する");
+    assert !content.contains("id=\"comment_text\"");
   }
 
   @Test
   public void ログインしたユーザーはツイート詳細ページでコメント投稿できる() throws Exception {
-    // ログインする
-    MvcResult loginResult = mockMvc.perform(post("/login")
-        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-        .param("email", userForm.getEmail())
-        .param("password", userForm.getPassword())
-        .with(csrf()))
+    MvcResult loginResult = mockMvc.perform(formLogin("/login")
+            .userParameter("email")
+            .user(userForm.getEmail())
+            .password(userForm.getPassword()))
+        .andExpect(status().isFound())
+        .andExpect(redirectedUrl("/prototypes"))
         .andReturn();
 
-    MockHttpSession session  = (MockHttpSession)loginResult.getRequest().getSession();
+    MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession();
     assertNotNull(session);
+
+    UserEntity userFromDb = userRepository.findByEmail(userForm.getEmail());
 
     // ツイート詳細ページに遷移する
     mockMvc.perform(get("/prototypes/{id}", prototypeEntity.getId()).session(session))
         .andExpect(status().isOk())
-        .andExpect(content().string(containsString(prototypeEntity.getTitle())));
+        .andExpect(content().string(containsString(prototypeEntity.getTitle())))
+        .andExpect(content().string(containsString("id=\"comment_text\"")))
+        .andExpect(content().string(containsString("送信する")));
 
     List<CommentEntity> commentsListBeforePost = commentRepository.findByPrototypeId(prototypeEntity.getId());
     initialCount = commentsListBeforePost.size();
@@ -118,9 +145,16 @@ public class CommentIntegrationTest {
     afterCount = commentsListAfterPost.size();
     assertEquals(initialCount + 1, afterCount);
 
+    CommentEntity lastComment = commentsListAfterPost.get(commentsListAfterPost.size() - 1);
+    assertEquals(userFromDb.getId(), lastComment.getUser().getId());
+    assertEquals(prototypeEntity.getId(), lastComment.getPrototypeId());
+    assertEquals(commentForm.getText().trim(), lastComment.getText());
+    assertEquals(userFromDb.getName(), lastComment.getUser().getName());
+
     // 詳細ページに再度アクセスして、コメント内容を確認
     mockMvc.perform(get("/prototypes/{id}", prototypeEntity.getId()).session(session))
         .andExpect(status().isOk())
-        .andExpect(content().string(containsString(commentForm.getText())));
+        .andExpect(content().string(containsString(commentForm.getText())))
+        .andExpect(content().string(containsString(userFromDb.getName())));
   }
 }
