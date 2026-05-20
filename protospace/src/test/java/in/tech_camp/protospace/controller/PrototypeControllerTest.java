@@ -40,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import in.tech_camp.protospace.SecurityConfig;
 import in.tech_camp.protospace.custom_user.CustomUserDetail;
+import in.tech_camp.protospace.entity.CommentEntity;
 import in.tech_camp.protospace.entity.PrototypeEntity;
 import in.tech_camp.protospace.entity.UserEntity;
 import in.tech_camp.protospace.factory.PrototypeFormFactory;
@@ -191,12 +192,56 @@ class PrototypeControllerTest {
         @Test
         void プロトタイプ詳細ページが表示される() throws Exception {
             PrototypeEntity prototype = prototypeEntity(1, 10);
+            prototype.setComments(Collections.emptyList());
             when(prototypeRepository.findById(1)).thenReturn(prototype);
 
             mockMvc.perform(get("/prototypes/1"))
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/detail"))
-                    .andExpect(model().attribute("prototype", prototype));
+                    .andExpect(model().attribute("prototype", prototype))
+                    .andExpect(model().attributeExists("comments"));
+        }
+
+        @Test
+        void ログイン時はプロトタイプ詳細にコメント投稿フォームが含まれる() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            prototype.setComments(Collections.emptyList());
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(get("/prototypes/1").with(authentication(authWithUserId(10))))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("id=\"comment_text\"")))
+                    .andExpect(content().string(containsString("/prototypes/1/comments")))
+                    .andExpect(content().string(containsString("送信する")));
+        }
+
+        @Test
+        void 未ログイン時はプロトタイプ詳細にコメント投稿フォームが含まれない() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            prototype.setComments(Collections.emptyList());
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(get("/prototypes/1"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(not(containsString("id=\"comment_text\""))));
+        }
+
+        @Test
+        void プロトタイプ詳細のコメント一覧に本文と投稿者名が表示される() throws Exception {
+            PrototypeEntity prototype = prototypeEntity(1, 10);
+            CommentEntity comment = new CommentEntity();
+            comment.setText("一覧に載る本文");
+            UserEntity author = new UserEntity();
+            author.setId(20);
+            author.setName("表示太郎");
+            comment.setUser(author);
+            prototype.setComments(List.of(comment));
+            when(prototypeRepository.findById(1)).thenReturn(prototype);
+
+            mockMvc.perform(get("/prototypes/1"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("一覧に載る本文")))
+                    .andExpect(content().string(containsString("表示太郎")));
         }
 
         @Test
@@ -230,6 +275,7 @@ class PrototypeControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(view().name("prototypes/detail"))
                     .andExpect(model().attribute("prototype", prototype))
+                    .andExpect(model().attributeExists("comments"))
                     .andExpect(content().string(not(containsString("編集する"))))
                     .andExpect(content().string(not(containsString("削除する"))));
         }
@@ -348,6 +394,7 @@ class PrototypeControllerTest {
                     .andExpect(header().string("Content-Type", "image/jpeg"))
                     .andExpect(content().bytes("image data".getBytes()));
         }
+
     }
 
     @Nested
@@ -356,8 +403,8 @@ class PrototypeControllerTest {
         @Test
         void 未認証では新規作成フォームへアクセスするとログインへリダイレクトされる() throws Exception {
             mockMvc.perform(get("/prototypes/new"))
-                    .andExpect(status().isOk())
-                    .andExpect(view().name("prototypes/new"));
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrlPattern("**/users/login"));
         }
 
         @Test

@@ -1,7 +1,7 @@
 <div xmlns:th="http://www.thymeleaf.org" th:fragment="content(prototype)">
   <a th:href="@{/prototypes/{id}(id=${prototype.id})}" class="card__img">
     <img
-      th:if="${prototype.imageName != null && !prototype.imageName.isEmpty()}"
+      th:if="${(prototype.imageName != null && !prototype.imageName.isEmpty()) || prototype.imageData != null}"
       th:src="@{/prototypes/{id}/image(id=${prototype.id})}"
       alt="プロトタイプの画像"
       class="card__img"

@@ -33,11 +33,9 @@ public class SecurityConfig {
                         .ignoringRequestMatchers("/login"))
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/css/**", "/images/**", "/users/sign_up", "/users/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/", "/prototypes").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/prototypes/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/prototypes/*/image").permitAll()
-                        .requestMatchers("/prototypes/new").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/prototypes/new").authenticated()
                         .requestMatchers(HttpMethod.GET, "/prototypes/*/edit").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/", "/prototypes", "/prototypes/*", "/prototypes/*/image").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/prototypes", "/prototypes/*").authenticated()

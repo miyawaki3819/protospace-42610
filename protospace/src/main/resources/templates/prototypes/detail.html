@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ja">
   <head>
     <meta charset="UTF-8" />
     <title>Protospace</title>
@@ -32,7 +32,7 @@
           </div>
           <div class="prototype__image">
             <img
-              th:if="${prototype.imageName != null && !prototype.imageName.isEmpty()}"
+              th:if="${(prototype.imageName != null && !prototype.imageName.isEmpty()) || prototype.imageData != null}"
               th:src="@{/prototypes/{id}/image(id=${prototype.id})}"
               alt="プロトタイプの画像"
             />
@@ -48,27 +48,29 @@
             </div>
           </div>
           <div class="prototype__comments">
-            <!-- ログインしているユーザーには以下のコメント投稿フォームを表示する -->
-            <div>
-              <form th:action="@{/}" method="post" th:object="${commentForm}">
+            <div th:if="${commentForm != null}">
+              <form
+                th:action="@{/prototypes/{id}/comments(id=${prototype.id})}"
+                method="post"
+                th:object="${commentForm}"
+              >
                 <div class="field">
-                  <label for="content">コメント</label><br />
-                  <input type="text" id="text" />
+                  <label for="comment_text">コメント</label><br />
+                  <input type="text" id="comment_text" class="form__text" th:field="*{text}" />
                 </div>
+                <p th:if="${commentErrorMessage != null}" class="form__error" th:text="${commentErrorMessage}"></p>
                 <div class="actions">
                   <input type="submit" class="form__btn" value="送信する" />
                 </div>
               </form>
             </div>
-            <!-- ログインしているユーザーには上記のコメント投稿フォームを表示する -->
 
-            <!-- 投稿に紐づくコメントを一覧する処理を記述する -->
             <ul class="comments_lists">
-              <li class="comments_list">
-                <a th:href="@{/}" class="comment_user"></a>
+              <li class="comments_list" th:each="comment : ${comments}">
+                <span class="comment_user" th:text="${comment.user != null ? comment.user.name : ''}"></span>
+                <span th:text="${comment.text}"></span>
               </li>
             </ul>
-            <!-- 投稿に紐づくコメントを一覧する処理を記述する -->
           </div>
         </div>
       </div>

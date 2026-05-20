@@ -1,6 +1,7 @@
 package in.tech_camp.protospace.controller;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,7 +20,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import in.tech_camp.protospace.custom_user.CustomUserDetail;
+import in.tech_camp.protospace.form.CommentForm;
 import in.tech_camp.protospace.form.PrototypeForm;
+import in.tech_camp.protospace.entity.CommentEntity;
 import in.tech_camp.protospace.entity.PrototypeEntity;
 import in.tech_camp.protospace.repository.PrototypeRepository;
 import in.tech_camp.protospace.validation.PrototypeCreateValidation;
@@ -37,6 +40,11 @@ public class PrototypeController {
         this.prototypeRepository = prototypeRepository;
     }
 
+    @GetMapping("/")
+    public String home() {
+        return "index";
+    }
+
     @GetMapping("/prototypes")
     public String index(Model model) {
         List<PrototypeEntity> prototypes = prototypeRepository.findAll();
@@ -45,7 +53,7 @@ public class PrototypeController {
     }
 
     @GetMapping("/prototypes/{id}")
-    public String show(@PathVariable("id") Integer id, Model model) {
+    public String show(@PathVariable("id") Integer id, Model model, @AuthenticationPrincipal CustomUserDetail userDetail) {
 
         PrototypeEntity prototype = prototypeRepository.findById(id);
         if (prototype == null) {
@@ -53,6 +61,13 @@ public class PrototypeController {
         }
 
         model.addAttribute("prototype", prototype);
+        List<CommentEntity> comments = prototype.getComments() != null
+                ? prototype.getComments()
+                : Collections.emptyList();
+        model.addAttribute("comments", comments);
+        if (userDetail != null) {
+            model.addAttribute("commentForm", new CommentForm());
+        }
         return "prototypes/detail";
     }
 
