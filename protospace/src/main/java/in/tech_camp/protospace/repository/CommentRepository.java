@@ -21,12 +21,11 @@ public interface CommentRepository {
             @Result(property = "user", column = "user_id",
                     one = @One(select = "in.tech_camp.protospace.repository.UserRepository.findById")),
             @Result(property = "prototype", column = "prototype_id",
-                    one = @One(select = "in.tech_camp.protospace.repository.PrototypeRepository.findByIdWithoutComments")),
-            @Result(property = "prototypeId", column = "prototype_id")
+                    one = @One(select = "in.tech_camp.protospace.repository.PrototypeRepository.findByIdWithoutComments"))
     })
     List<CommentEntity> findByPrototypeId(Integer prototypeId);
 
-    @Insert("INSERT INTO comments (content, user_id, prototype_id) VALUES (#{text}, #{user.id}, #{prototypeId})")
+    @Insert("INSERT INTO comments (content, user_id, prototype_id) VALUES (#{text}, #{user.id}, #{prototype.id})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(CommentEntity comment);
 }

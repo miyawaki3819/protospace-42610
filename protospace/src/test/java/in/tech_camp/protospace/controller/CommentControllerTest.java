@@ -91,7 +91,7 @@ class CommentControllerTest {
             ArgumentCaptor<CommentEntity> captor = ArgumentCaptor.forClass(CommentEntity.class);
             verify(commentRepository).insert(captor.capture());
             assertThat(captor.getValue().getText(), is("いいね"));
-            assertThat(captor.getValue().getPrototypeId(), is(1));
+            assertThat(captor.getValue().getPrototype().getId(), is(1));
             assertThat(captor.getValue().getUser().getId(), is(5));
         }
 
@@ -112,7 +112,7 @@ class CommentControllerTest {
             ArgumentCaptor<CommentEntity> captor = ArgumentCaptor.forClass(CommentEntity.class);
             verify(commentRepository).insert(captor.capture());
             CommentEntity saved = captor.getValue();
-            assertThat(saved.getPrototypeId(), is(prototypeId));
+            assertThat(saved.getPrototype().getId(), is(prototypeId));
             assertThat(saved.getUser().getId(), is(authenticatedUserId));
             assertThat(saved.getText(), is("保存確認用"));
         }

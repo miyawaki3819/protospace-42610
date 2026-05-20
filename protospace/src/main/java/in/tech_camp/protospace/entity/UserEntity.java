@@ -14,4 +14,5 @@ public class UserEntity {
     private String occupation;
     private String position;
     private List<PrototypeEntity> prototypes;
+    private List<CommentEntity> comments;
 }

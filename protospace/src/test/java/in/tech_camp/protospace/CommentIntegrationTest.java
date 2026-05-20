@@ -147,7 +147,7 @@ public class CommentIntegrationTest {
 
     CommentEntity lastComment = commentsListAfterPost.get(commentsListAfterPost.size() - 1);
     assertEquals(userFromDb.getId(), lastComment.getUser().getId());
-    assertEquals(prototypeEntity.getId(), lastComment.getPrototypeId());
+    assertEquals(prototypeEntity.getId(), lastComment.getPrototype().getId());
     assertEquals(commentForm.getText().trim(), lastComment.getText());
     assertEquals(userFromDb.getName(), lastComment.getUser().getName());
 

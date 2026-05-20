@@ -52,7 +52,7 @@ public class CommentController {
 
         CommentEntity comment = new CommentEntity();
         comment.setText(commentForm.getText().trim());
-        comment.setPrototypeId(id);
+        comment.setPrototype(prototype);
         comment.setUser(userDetail.getUser());
         try {
             commentRepository.insert(comment);
